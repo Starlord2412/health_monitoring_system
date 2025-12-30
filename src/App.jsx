@@ -1,11 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { DoctorLayout } from "./components/DoctorLayout";
-import { DoctorDashboard } from "./pages/DoctorDashboard";
-import { PatientsList } from "./pages/PatientsList";
-import { DoctorAlerts } from "./pages/DoctorAlerts";
-import { DoctorReports } from "./pages/DoctorReports";
-import { DoctorPrescription } from "./pages/DoctorPrescription";
-import { DoctorConsult } from "./pages/DoctorConsult";
 import HomePage from "./pages/homepage";
 import FamilyLayout from "./components/family/FamilyLayout";
 import FamilyDashboard from "./components/family/FamilyDashboard";
@@ -15,6 +8,17 @@ import MedicationPage from "./components/family/MedicationPage";
 import ContactDoctorPage from "./components/family/ContactDoctorPage";
 import SignupPage from "./components/signup";
 import LoginPage from "./components/login";
+import { DoctorLayout } from "./components/doctor/DoctorLayout";
+import { DoctorDashboard } from "./components/doctor/DoctorDashboard";
+import { PatientsList } from "./components/doctor/PatientsList";
+import { DoctorAlerts } from "./components/doctor/DoctorAlerts";
+import { DoctorReports } from "./components/doctor/DoctorReports";
+import { DoctorPrescription } from "./components/doctor/DoctorPrescription";
+import { DoctorConsult } from "./components/doctor/DoctorConsult";
+import AdminDashboard from "./components/admin/adminLayout";
+
+import HealthTrackDashboard from "./components/patient/patientLayout";
+
 
 export default function App() {
   return (
@@ -51,6 +55,21 @@ export default function App() {
           <Route path="contact-doctor" element={<ContactDoctorPage />} />
         </Route>
 
+{/* patient routes */}
+
+<Route path="/patient" element={<HealthTrackDashboard />}>
+<Route index element={<Navigate to="dashboard" replace />} />
+          {/* <Route path="dashboard" element={} />
+          <Route path="alerts" element={} />
+          <Route path="reports" element={} />
+          <Route path="medication" element={<} />
+          <Route path="contact-doctor" element={<} /> */}
+
+
+</Route>
+
+
+<Route path="/admin" element={<AdminDashboard/>}></Route>
         
         {/* Fallback */}
         <Route path="*" element={<Navigate to="" replace />} />

@@ -79,9 +79,22 @@ export default function LoginPage() {
     }
   };
 
+
+  const roleRoutes = {
+  doctor: '/doctor',
+  patient: '/patient',
+  admin: '/admin',
+  family: '/family',
+};
+
+
+
+
   useEffect(() => {
     if (submitted) {
       const role = String(formData.role || roleFromSignup || '').toLowerCase();
+    
+
       const target = role === 'doctor' ? '/doctor' : '/family';
       const timer = setTimeout(() => navigate(target, { replace: true }), 800);
       return () => clearTimeout(timer);
