@@ -1,134 +1,685 @@
+// src/components/SignupPage.jsx
 
+import React, { useState } from 'react';
+import { Eye, EyeOff, Heart } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { register } from '../services/authService';
 
-//DOctor alerts 
+export default function SignupPage() {
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role");
+  const navigate = useNavigate();
 
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { AlertTriangle, Bell, Heart, Activity } from "lucide-react";
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    role: role || '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-const mockAlerts = [
-  {
-    id: 1,
-    patient: "Sarah Johnson",
-    type: "BP Abnormal",
-    message: "Blood pressure reading of 158/98 mmHg detected at 4:20 PM",
-    severity: "critical",
-    time: "10 minutes ago",
-    icon: AlertTriangle,
-  },
-  {
-    id: 2,
-    patient: "Robert Wilson",
-    type: "Irregular Heartbeat",
-    message: "Heart rate fluctuation detected - ranging from 55 to 110 bpm",
-    severity: "high",
-    time: "25 minutes ago",
-    icon: Heart,
-  },
-  {
-    id: 3,
-    patient: "Emily Davis",
-    type: "High Blood Sugar",
-    message: "Blood glucose level at 195 mg/dL, above target range",
-    severity: "high",
-    time: "1 hour ago",
-    icon: Activity,
-  },
-  {
-    id: 4,
-    patient: "Michael Chen",
-    type: "Medication Missed",
-    message: "Patient missed scheduled insulin dose at 2:00 PM",
-    severity: "warning",
-    time: "2 hours ago",
-    icon: Bell,
-  },
-  {
-    id: 5,
-    patient: "David Martinez",
-    type: "Low Heart Rate",
-    message: "Heart rate dropped to 52 bpm during rest period",
-    severity: "warning",
-    time: "3 hours ago",
-    icon: Heart,
-  },
-];
+  const roles = [
+    { id: 'patient', label: 'Patient', description: 'Track your health' },
+    { id: 'doctor', label: 'Doctor', description: 'Manage patient records' },
+    { id: 'admin', label: 'Administrator', description: 'System management' },
+  ];
 
-const getSeverityColor = (severity: string) => {
-  const colors = {
-    critical: "bg-red-100 text-red-800 border-red-200",
-    high: "bg-orange-100 text-orange-800 border-orange-200",
-    warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    info: "bg-blue-100 text-blue-800 border-blue-200",
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!formData.role) {
+      newErrors.role = 'Please select a role';
+    }
+
+    return newErrors;
   };
-  return colors[severity as keyof typeof colors] || "";
-};
 
-const getIconColor = (severity: string) => {
-  const colors = {
-    critical: "text-red-600",
-    high: "text-orange-600",
-    warning: "text-yellow-600",
-    info: "text-blue-600",
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
   };
-  return colors[severity as keyof typeof colors] || "";
-};
 
-export function DoctorAlerts() {
+  const handleRoleChange = (roleId) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: roleId,
+    }));
+    if (errors.role) {
+      setErrors((prev) => ({
+        ...prev,
+        role: '',
+      }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    const newErrors = validateForm();
+
+    if (Object.keys(newErrors).length === 0) {
+      setIsLoading(true);
+
+      try {
+        // Register user using authService
+        const result = await register({
+          username: formData.username,
+          password: formData.password,
+          role: formData.role,
+        });
+
+        if (result.success) {
+          setSubmitted(true);
+          setSuccessMessage(result.message);
+
+          console.log('User registered successfully:', result.user);
+
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            navigate("/login", {
+              state: {
+                role: formData.role,
+                username: formData.username,
+                message: 'Account created successfully! Please login.',
+              }
+            });
+          }, 2000);
+        } else {
+          // Show error from registration
+          setErrors({
+            submit: result.error || 'Registration failed',
+          });
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        setErrors({
+          submit: 'An unexpected error occurred. Please try again.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setErrors(newErrors);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="bg-green-100 rounded-full p-4">
+              <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome!</h2>
+          <p className="text-gray-600 mb-2">
+            Your account has been created successfully as a{' '}
+            <span className="font-semibold text-teal-600">
+              {roles.find(r => r.id === formData.role)?.label}
+            </span>.
+          </p>
+          <p className="text-sm text-gray-500 mb-4">Username: <span className="font-semibold">{formData.username}</span></p>
+          <p className="text-sm text-gray-500 animate-pulse">Redirecting to login page...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">AI-Flagged Alerts</h1>
-        <p className="text-slate-600">Real-time health anomaly detection</p>
+    <div className="min-h-screen bg-gradient-to-br from-teal-500 via-teal-400 to-cyan-500 flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute top-10 left-10 opacity-20">
+        <Heart size={40} className="text-white animate-pulse" />
+      </div>
+      <div className="absolute bottom-10 right-10 opacity-20">
+        <Heart size={60} className="text-white" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {mockAlerts.map((alert) => (
-          <Card key={alert.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-full bg-slate-100`}>
-                  <alert.icon className={`w-6 h-6 ${getIconColor(alert.severity)}`} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-lg mb-1">{alert.type}</h3>
-                      <p className="text-sm text-slate-600">Patient: {alert.patient}</p>
+      {/* Main card */}
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full relative z-10">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Heart className="text-teal-600" size={32} />
+            <h1 className="text-4xl font-bold text-gray-800">HealthTrack</h1>
+          </div>
+          <p className="text-gray-600 text-lg">Create Your Account</p>
+        </div>
+
+        {/* Error message for submit errors */}
+        {errors.submit && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 text-sm flex items-center gap-2">
+              <span>⚠️</span> {errors.submit}
+            </p>
+          </div>
+        )}
+
+        {/* Form Content */}
+        <div className="space-y-6">
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Choose a username"
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none ${errors.username
+                  ? 'border-red-500 focus:border-red-600'
+                  : 'border-gray-300 focus:border-teal-500'
+                }`}
+              disabled={isLoading}
+            />
+            {errors.username && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <span>⚠</span> {errors.username}
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a strong password"
+                className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none pr-12 ${errors.password
+                    ? 'border-red-500 focus:border-red-600'
+                    : 'border-gray-300 focus:border-teal-500'
+                  }`}
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                disabled={isLoading}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <span>⚠</span> {errors.password}
+              </p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Re-enter your password"
+                className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none pr-12 ${errors.confirmPassword
+                    ? 'border-red-500 focus:border-red-600'
+                    : 'border-gray-300 focus:border-teal-500'
+                  }`}
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                disabled={isLoading}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <span>⚠</span> {errors.confirmPassword}
+              </p>
+            )}
+          </div>
+
+          {/* Role Selection - Uncomment if needed */}
+          {!role && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Select Your Role
+              </label>
+              <div className="space-y-2">
+                {roles.map((roleOption) => (
+                  <button
+                    key={roleOption.id}
+                    type="button"
+                    onClick={() => handleRoleChange(roleOption.id)}
+                    className={`w-full p-4 rounded-lg border-2 transition-all text-left ${formData.role === roleOption.id
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-300 bg-white hover:border-teal-300'
+                      }`}
+                    disabled={isLoading}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.role === roleOption.id
+                          ? 'border-teal-500 bg-teal-500'
+                          : 'border-gray-300'
+                        }`}>
+                        {formData.role === roleOption.id && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800">{roleOption.label}</p>
+                        <p className="text-sm text-gray-600">{roleOption.description}</p>
+                      </div>
                     </div>
-                    <Badge className={getSeverityColor(alert.severity)}>
-                      {alert.severity.toUpperCase()}
-                    </Badge>
-                  </div>
-                  <p className="text-slate-700 mb-3">{alert.message}</p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-slate-500">{alert.time}</p>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        Dismiss
-                      </Button>
-                      <Button size="sm">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                  </button>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              {errors.role && (
+                <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                  <span>⚠</span> {errors.role}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading}
+
+            // className={`w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg mt-8 ${
+
+            className={`w-full bg-linear-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg mt-8 ${b4a88bab70c21c03cc096493c8785bc2765dca99
+              isLoading
+                ? 'opacity-50 cursor-not-allowed'
+          : 'hover:from-teal-600 hover:to-teal-700 hover:shadow-xl transform hover:scale-105'
+            }`}
+          ></div>
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Creating Account...
+          </span>
+        ) : (
+          'Create Account'
+        )}
+      </button>
+    </div>
+
+        {/* Footer */ }
+  <p className="text-center text-gray-600 mt-6">
+    Already have an account?{' '}
+    <button
+      onClick={() => navigate('/login')}
+      className="text-teal-600 font-semibold hover:underline"
+      disabled={isLoading}
+    >
+      Login here
+    </button>
+  </p>
+      </div >
+    </div >
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// src/components/LoginPage.jsx
+
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, Heart } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { login } from '../services/authService';
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [formData, setFormData] = useState({
+    username: location.state?.username || '',
+    password: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
+
+  useEffect(() => {
+    // Clear success message after 5 seconds
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    return newErrors;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const newErrors = validateForm();
+
+    if (Object.keys(newErrors).length === 0) {
+      setIsLoading(true);
+      setErrors({});
+      
+      try {
+        const result = await login(formData.username, formData.password);
+
+        if (result.success) {
+          console.log('Login successful:', result.user);
+          
+          // Redirect based on role
+          const redirectMap = {
+            patient: '/patient',
+            doctor: '/doctor',
+            admin: '/admin',
+<<<<<<< HEAD
+            family:'/family'
+=======
+            family : '/family'
+>>>>>>> b4a88bab70c21c03cc096493c8785bc2765dca99
+          };
+          
+          const redirectPath = redirectMap[result.user.role] || '/';
+          navigate(redirectPath, { 
+            state: { user: result.user },
+            replace: true,
+          });
+        } else {
+          setErrors({
+            submit: result.error || 'Login failed',
+          });
+        }
+<<<<<<< HEAD
+=======
+        
+>>>>>>> b4a88bab70c21c03cc096493c8785bc2765dca99
+      } catch (error) {
+        console.error('Login error:', error);
+        setErrors({
+          submit: 'An unexpected error occurred. Please try again.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setErrors(newErrors);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-teal-500 via-teal-400 to-cyan-500 flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute top-10 left-10 opacity-20">
+        <Heart size={40} className="text-white animate-pulse" />
+      </div>
+      <div className="absolute bottom-10 right-10 opacity-20">
+        <Heart size={60} className="text-white" />
       </div>
 
-      {mockAlerts.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Bell className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-600">No alerts at this time</p>
-            <p className="text-sm text-slate-500 mt-2">You'll be notified when anomalies are detected</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Main card */}
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full relative z-10">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Heart className="text-teal-600" size={32} />
+            <h1 className="text-4xl font-bold text-gray-800">HealthTrack</h1>
+          </div>
+          <p className="text-gray-600 text-lg">Welcome Back</p>
+        </div>
+
+        {/* Success message */}
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-green-700 text-sm flex items-center gap-2">
+              <span>✓</span> {successMessage}
+            </p>
+          </div>
+        )}
+
+        {/* Error message */}
+        {errors.submit && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 text-sm flex items-center gap-2">
+              <span>⚠️</span> {errors.submit}
+            </p>
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Enter your username"
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none ${
+                errors.username
+                  ? 'border-red-500 focus:border-red-600'
+                  : 'border-gray-300 focus:border-teal-500'
+              }`}
+              disabled={isLoading}
+              autoComplete="username"
+            />
+            {errors.username && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <span>⚠</span> {errors.username}
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none pr-12 ${
+                  errors.password
+                    ? 'border-red-500 focus:border-red-600'
+                    : 'border-gray-300 focus:border-teal-500'
+                }`}
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                disabled={isLoading}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <span>⚠</span> {errors.password}
+              </p>
+            )}
+          </div>
+
+          {/* Forgot Password Link */}
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              className="text-sm text-teal-600 hover:underline"
+              disabled={isLoading}
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg ${
+
+            className={`w-full bg-linear-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg ${
+ b4a88bab70c21c03cc096493c8785bc2765dca99
+              isLoading
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:from-teal-600 hover:to-teal-700 hover:shadow-xl transform hover:scale-105'
+            }`}
+        >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Logging in...
+              </span>
+            ) : (
+              'Login'
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <p className="text-center text-gray-600 mt-6">
+          Don't have an account?{' '}
+          <button
+            onClick={() => navigate('/signup')}
+            className="text-teal-600 font-semibold hover:underline"
+            disabled={isLoading}
+          >
+            Sign up here
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

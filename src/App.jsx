@@ -16,7 +16,7 @@ import { DoctorReports } from "./components/doctor/DoctorReports";
 import { DoctorPrescription } from "./components/doctor/DoctorPrescription";
 import { DoctorConsult } from "./components/doctor/DoctorConsult";
 import AdminDashboard from "./components/admin/adminLayout";
-
+import AboutPage from "./components/AboutPage";
 import HealthTrackDashboard from "./components/patient/patientLayout";
 
 
@@ -29,7 +29,8 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
-
+        <Route path="/about" element={<AboutPage />} /> 
+        {/* <Route path="/faq" element={<FAQPage />} /> */}
 
 
         {/* Doctor Routes */}

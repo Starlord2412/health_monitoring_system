@@ -1,5 +1,3 @@
-// src/components/SignupPage.jsx
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, Heart } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -89,7 +87,7 @@ export default function SignupPage() {
 
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
-      
+
       try {
         // Register user using authService
         const result = await register({
@@ -101,9 +99,9 @@ export default function SignupPage() {
         if (result.success) {
           setSubmitted(true);
           setSuccessMessage(result.message);
-          
+
           console.log('User registered successfully:', result.user);
-          
+
           // Redirect to login after 2 seconds
           setTimeout(() => {
             navigate("/login", {
@@ -288,7 +286,7 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Role Selection - Uncomment if needed */}
+          {/* Role Selection */}
           {!role && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">

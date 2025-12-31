@@ -1,8 +1,16 @@
 import { useState } from 'react';
+
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+
 import { AlertTriangle, MapPin, Clock, Search, Filter } from 'lucide-react';
 
 const alertsData = [
@@ -80,194 +88,201 @@ const alertsData = [
   },
 ];
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'active':
+      return 'bg-red-50 text-red-600';
+    case 'acknowledged':
+      return 'bg-amber-50 text-amber-600';
+    case 'resolved':
+      return 'bg-emerald-50 text-emerald-600';
+    default:
+      return 'bg-gray-50 text-gray-600';
+  }
+};
+
 export default function AlertsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const filteredAlerts = alertsData.filter((alert) => {
-    const matchesSearch = 
-      alert.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alert.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alert.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      alert.type.toLowerCase().includes(q) ||
+      alert.location.toLowerCase().includes(q) ||
+      alert.description.toLowerCase().includes(q);
+
     const matchesSeverity = severityFilter === 'all' || alert.severity === severityFilter;
     const matchesStatus = statusFilter === 'all' || alert.status === statusFilter;
 
     return matchesSearch && matchesSeverity && matchesStatus;
   });
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'medium':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'low':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-200">Active</Badge>;
-      case 'acknowledged':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">Acknowledged</Badge>;
-      case 'resolved':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Resolved</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  const totalAlerts = alertsData.length;
+  const activeAlerts = alertsData.filter((a) => a.status === 'active').length;
+  const highSeverity = alertsData.filter((a) => a.severity === 'high').length;
+  const resolvedAlerts = alertsData.filter((a) => a.status === 'resolved').length;
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h2 className="text-3xl text-gray-900 mb-2">Alerts</h2>
-        <p className="text-gray-600">Monitor all health alerts and notifications</p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Total Alerts</p>
-          <h3 className="text-2xl text-gray-900">{alertsData.length}</h3>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Active</p>
-          <h3 className="text-2xl text-red-600">
-            {alertsData.filter((a) => a.status === 'active').length}
-          </h3>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">High Severity</p>
-          <h3 className="text-2xl text-orange-600">
-            {alertsData.filter((a) => a.severity === 'high').length}
-          </h3>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Resolved Today</p>
-          <h3 className="text-2xl text-green-600">4</h3>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search alerts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+    <div className="min-h-screen bg-[#C9E6E2] px-6 py-6 flex justify-center">
+      <div className="w-full max-w-6xl">
+        {/* Top header like hero card */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
+              Alerts center
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-teal-950">
+              Real‑time safety monitoring
+            </h1>
+            <p className="mt-1 text-sm text-teal-900/80">
+              View and manage falls, vitals, and medication alerts in one clean dashboard.
+            </p>
           </div>
-          
-          <Select value={severityFilter} onValueChange={setSeverityFilter}>
-            <SelectTrigger>
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <SelectValue placeholder="Filter by severity" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Severities</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <SelectValue placeholder="Filter by status" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="acknowledged">Acknowledged</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Summary pill row */}
+          <div className="flex gap-3">
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">Active alerts</p>
+              <p className="text-lg font-semibold text-red-500">{activeAlerts}</p>
+            </div>
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">High priority</p>
+              <p className="text-lg font-semibold text-orange-500">{highSeverity}</p>
+            </div>
+          </div>
         </div>
-      </Card>
 
-      {/* Alerts List */}
-      <div className="space-y-4">
-        {filteredAlerts.map((alert) => (
-          <Card key={alert.id} className={`p-6 border-l-4 ${
-            alert.severity === 'high'
-              ? 'border-l-red-500'
-              : alert.severity === 'medium'
-              ? 'border-l-orange-500'
-              : 'border-l-yellow-500'
-          }`}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4 flex-1">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  alert.severity === 'high'
-                    ? 'bg-red-100'
-                    : alert.severity === 'medium'
-                    ? 'bg-orange-100'
-                    : 'bg-yellow-100'
-                }`}>
-                  <AlertTriangle className={`w-6 h-6 ${
-                    alert.severity === 'high'
-                      ? 'text-red-600'
-                      : alert.severity === 'medium'
-                      ? 'text-orange-600'
-                      : 'text-yellow-600'
-                  }`} />
-                </div>
-                
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg text-gray-900">{alert.type}</h3>
-                    <Badge variant="outline" className={getSeverityColor(alert.severity)}>
-                      {alert.severity}
-                    </Badge>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-3">{alert.description}</p>
-                  
-                  <div className="flex items-center gap-6 text-sm text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{alert.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{alert.location}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-end gap-3">
-                {getStatusBadge(alert.status)}
-                {alert.status === 'active' && (
-                  <button className="text-sm text-blue-600 hover:text-blue-700">
-                    Acknowledge
-                  </button>
-                )}
+        {/* Big glass card like the middle phone in image */}
+        <div className="rounded-3xl bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,118,110,0.18)] backdrop-blur">
+          {/* Filters row */}
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search alerts by type, room or description"
+                  className="h-10 rounded-2xl border-0 bg-teal-50/70 pl-9 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-teal-400"
+                />
               </div>
             </div>
-          </Card>
-        ))}
-      </div>
 
-      {filteredAlerts.length === 0 && (
-        <Card className="p-12 text-center">
-          <p className="text-gray-500">No alerts found matching your filters</p>
-        </Card>
-      )}
+            <div className="flex gap-2">
+              <div className="flex items-center gap-1.5 rounded-2xl bg-teal-50/80 px-3 py-1.5">
+                <Filter className="h-4 w-4 text-teal-700" />
+                <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                  <SelectTrigger className="h-7 border-0 bg-transparent p-0 text-xs font-medium text-teal-800 focus:ring-0">
+                    <SelectValue placeholder="Severity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All severity</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-9 rounded-2xl border-0 bg-teal-50/80 px-3 text-xs font-medium text-teal-900 focus:ring-0">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="acknowledged">Acknowledged</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Stats chips like bottom nav style */}
+          <div className="mb-4 flex flex-wrap gap-2">
+            <div className="flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-[11px] text-teal-900">
+              <span className="h-2 w-2 rounded-full bg-teal-500" />
+              Total alerts: <span className="font-semibold">{totalAlerts}</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-[11px] text-red-700">
+              <span className="h-2 w-2 rounded-full bg-red-500" />
+              Active: <span className="font-semibold">{activeAlerts}</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Resolved:{' '}
+              <span className="font-semibold">{resolvedAlerts}</span>
+            </div>
+          </div>
+
+          {/* Alerts list – cards like small doctor cards in image */}
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {filteredAlerts.length === 0 && (
+              <div className="col-span-2 rounded-2xl border border-dashed border-teal-100 bg-teal-50/40 py-8 text-center text-xs text-gray-500">
+                No alerts found for current filters.
+              </div>
+            )}
+
+            {filteredAlerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="group relative overflow-hidden rounded-3xl border border-teal-50 bg-white/90 p-4 shadow-sm transition-all hover:shadow-[0_14px_30px_rgba(15,118,110,0.18)]"
+              >
+                {/* Status & severity chips on top */}
+                <div className="mb-2 flex items-center justify-between">
+                  <Badge
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${getStatusBadge(
+                      alert.status,
+                    )}`}
+                  >
+                    {alert.status.toUpperCase()}
+                  </Badge>
+                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-medium text-teal-800">
+                    {alert.severity.toUpperCase()} PRIORITY
+                  </span>
+                </div>
+
+                <div className="flex gap-3">
+                  {/* Icon bubble like avatar */}
+                  <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500 text-white shadow-md">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {alert.type}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-gray-500">
+                      {alert.description}
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {alert.time}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {alert.location}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom CTA pill like “Book Appointment” */}
+                <button className="mt-3 inline-flex h-8 items-center justify-center rounded-full bg-teal-500 px-4 text-[11px] font-medium text-white shadow-sm transition group-hover:bg-teal-600">
+                  View alert details
+                </button>
+
+                {/* Soft gradient highlight in background */}
+                <div className="pointer-events-none absolute -right-10 -top-10 h-20 w-20 rounded-full bg-teal-100/70 blur-3xl" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

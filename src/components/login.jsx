@@ -1,5 +1,3 @@
-// src/components/LoginPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Heart } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -74,7 +72,7 @@ export default function LoginPage() {
             patient: '/patient',
             doctor: '/doctor',
             admin: '/admin',
-            family:'/family'
+            family: '/family'
           };
           
           const redirectPath = redirectMap[result.user.role] || '/';

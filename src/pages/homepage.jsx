@@ -27,7 +27,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       {/* ================= HEADER ================= */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-emerald-600 to-teal-500 shadow-md">
+      <header className="sticky top-0 z-50 bg-linear-to-r from-emerald-600 to-teal-500 shadow-md">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <Heart className="h-8 w-8 text-white" fill="currentColor" />

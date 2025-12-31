@@ -1,9 +1,22 @@
+import { useState } from 'react';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
-import { FileText, Download, Calendar, User, Search, Filter } from 'lucide-react';
-import { useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  FileText,
+  Download,
+  Calendar,
+  User,
+  Search,
+  Filter,
+} from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 const medicalReports = [
   {
@@ -13,7 +26,8 @@ const medicalReports = [
     doctor: 'Dr. Sarah Johnson',
     type: 'General Checkup',
     category: 'routine',
-    summary: 'Overall health is good. Blood pressure slightly elevated. Recommended lifestyle modifications.',
+    summary:
+      'Overall health is good. Blood pressure slightly elevated. Recommended lifestyle modifications.',
     file: 'annual-physical-2024.pdf',
   },
   {
@@ -23,7 +37,8 @@ const medicalReports = [
     doctor: 'Dr. Michael Chen',
     type: 'Specialist Report',
     category: 'specialist',
-    summary: 'ECG shows normal sinus rhythm. Echocardiogram results within normal limits.',
+    summary:
+      'ECG shows normal sinus rhythm. Echocardiogram results within normal limits.',
     file: 'cardiology-consult-nov2024.pdf',
   },
   {
@@ -33,7 +48,8 @@ const medicalReports = [
     doctor: 'Lab Services',
     type: 'Laboratory',
     category: 'lab',
-    summary: 'Cholesterol levels slightly elevated. Glucose within normal range. Thyroid function normal.',
+    summary:
+      'Cholesterol levels slightly elevated. Glucose within normal range. Thyroid function normal.',
     file: 'bloodwork-nov2024.pdf',
   },
   {
@@ -43,7 +59,8 @@ const medicalReports = [
     doctor: 'Dr. Emily Rodriguez',
     type: 'Follow-up',
     category: 'followup',
-    summary: 'HbA1c at 6.8%. Good diabetes control. Continue current medication regimen.',
+    summary:
+      'HbA1c at 6.8%. Good diabetes control. Continue current medication regimen.',
     file: 'diabetes-review-oct2024.pdf',
   },
   {
@@ -53,7 +70,8 @@ const medicalReports = [
     doctor: 'Dr. James Wilson',
     type: 'Emergency',
     category: 'emergency',
-    summary: 'Patient presented with chest pain. Ruled out cardiac event. Diagnosed with GERD.',
+    summary:
+      'Patient presented with chest pain. Ruled out cardiac event. Diagnosed with GERD.',
     file: 'er-visit-sep2024.pdf',
   },
   {
@@ -63,7 +81,8 @@ const medicalReports = [
     doctor: 'Radiology Department',
     type: 'Imaging',
     category: 'imaging',
-    summary: 'No acute cardiopulmonary abnormality. Lungs are clear.',
+    summary:
+      'No acute cardiopulmonary abnormality. Lungs are clear.',
     file: 'chest-xray-sep2024.pdf',
   },
   {
@@ -73,7 +92,8 @@ const medicalReports = [
     doctor: 'Dr. Sarah Johnson',
     type: 'Medication Management',
     category: 'routine',
-    summary: 'Reviewed all current medications. Adjusted blood pressure medication dosage.',
+    summary:
+      'Reviewed all current medications. Adjusted blood pressure medication dosage.',
     file: 'med-review-aug2024.pdf',
   },
   {
@@ -83,7 +103,8 @@ const medicalReports = [
     doctor: 'Radiology Department',
     type: 'Imaging',
     category: 'imaging',
-    summary: 'Bone density within normal range for age. No signs of osteoporosis.',
+    summary:
+      'Bone density within normal range for age. No signs of osteoporosis.',
     file: 'dexa-scan-jul2024.pdf',
   },
 ];
@@ -100,173 +121,241 @@ export default function ReportsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const filteredReports = medicalReports.filter((report) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.summary.toLowerCase().includes(searchQuery.toLowerCase());
+      report.title.toLowerCase().includes(q) ||
+      report.doctor.toLowerCase().includes(q) ||
+      report.summary.toLowerCase().includes(q);
 
     const matchesCategory = categoryFilter === 'all' || report.category === categoryFilter;
-
     return matchesSearch && matchesCategory;
   });
 
   const getCategoryBadge = (category: string) => {
     const styles = {
-      routine: 'bg-blue-100 text-blue-700',
-      specialist: 'bg-purple-100 text-purple-700',
-      lab: 'bg-green-100 text-green-700',
-      imaging: 'bg-orange-100 text-orange-700',
-      emergency: 'bg-red-100 text-red-700',
-      followup: 'bg-yellow-100 text-yellow-700',
+      routine: 'bg-blue-50 text-blue-700',
+      specialist: 'bg-purple-50 text-purple-700',
+      lab: 'bg-green-50 text-green-700',
+      imaging: 'bg-orange-50 text-orange-700',
+      emergency: 'bg-red-50 text-red-700',
+      followup: 'bg-yellow-50 text-yellow-700',
     };
-    return styles[category as keyof typeof styles] || 'bg-gray-100 text-gray-700';
+    return styles[category as keyof typeof styles] || 'bg-gray-50 text-gray-700';
   };
 
+  const colors = {
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-green-100 text-green-600',
+    purple: 'bg-purple-100 text-purple-600',
+    orange: 'bg-orange-100 text-orange-600',
+  } as const;
+
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h2 className="text-3xl text-gray-900 mb-2">Medical Reports</h2>
-        <p className="text-gray-600">Access patient's medical history and documents</p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {vitalStats.map((stat) => {
-          const Icon = stat.icon;
-          const colors = {
-            blue: 'bg-blue-100 text-blue-600',
-            green: 'bg-green-100 text-green-600',
-            purple: 'bg-purple-100 text-purple-600',
-            orange: 'bg-orange-100 text-orange-600',
-          };
-          const colorClass = colors[stat.color as keyof typeof colors];
-
-          return (
-            <Card key={stat.label} className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-              <h3 className="text-2xl text-gray-900">{stat.value}</h3>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Search and Filter */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search reports..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+    <div className="min-h-screen bg-[#C9E6E2] px-6 py-6 flex justify-center">
+      <div className="w-full max-w-6xl">
+        {/* Header / Hero */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
+              Reports center
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-teal-950">
+              Medical history & documents
+            </h1>
+            <p className="mt-1 text-sm text-teal-900/80">
+              Browse lab results, imaging, and visit summaries in a clean, timeline view.
+            </p>
           </div>
 
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <SelectValue placeholder="Filter by category" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="routine">Routine</SelectItem>
-              <SelectItem value="specialist">Specialist</SelectItem>
-              <SelectItem value="lab">Laboratory</SelectItem>
-              <SelectItem value="imaging">Imaging</SelectItem>
-              <SelectItem value="emergency">Emergency</SelectItem>
-              <SelectItem value="followup">Follow-up</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Small stat pills like mobile cards */}
+          <div className="flex gap-3">
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">Total reports</p>
+              <p className="text-lg font-semibold text-teal-700">
+                {vitalStats[0].value}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">This year</p>
+              <p className="text-lg font-semibold text-teal-700">
+                {vitalStats[1].value}
+              </p>
+            </div>
+          </div>
         </div>
-      </Card>
 
-      {/* Reports Timeline */}
-      <div className="space-y-4">
-        {filteredReports.map((report, index) => (
-          <Card key={report.id} className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start gap-4">
-              {/* Timeline Indicator */}
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                </div>
-                {index !== filteredReports.length - 1 && (
-                  <div className="w-0.5 h-full bg-gray-200 mt-2" />
-                )}
-              </div>
+        {/* Main glass card */}
+        <div className="rounded-3xl bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,118,110,0.18)] backdrop-blur space-y-5">
+          {/* Top stat grid inside card */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {vitalStats.map((stat) => {
+              const Icon = stat.icon;
+              const colorClass = colors[stat.color as keyof typeof colors];
 
-              {/* Report Content */}
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg text-gray-900">{report.title}</h3>
-                      <Badge className={getCategoryBadge(report.category)}>
-                        {report.type}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{report.date}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        <span>{report.doctor}</span>
-                      </div>
+              return (
+                <Card
+                  key={stat.label}
+                  className="rounded-2xl border-0 bg-white/90 p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${colorClass}`}
+                    >
+                      <Icon className="h-5 w-5" />
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
-                    <Download className="w-4 h-4" />
-                    Download
-                  </button>
-                </div>
+                  <p className="text-[11px] text-gray-500 mb-1">{stat.label}</p>
+                  <h3 className="text-2xl font-semibold text-gray-900">
+                    {stat.value}
+                  </h3>
+                </Card>
+              );
+            })}
+          </div>
 
-                <p className="text-gray-600 mb-3">{report.summary}</p>
-
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <FileText className="w-3 h-3" />
-                  <span>{report.file}</span>
-                </div>
+          {/* Search + filter row */}
+          <Card className="border-0 bg-white/90 rounded-2xl p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search reports by title, doctor or summary"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-10 rounded-2xl border-0 bg-teal-50/70 pl-9 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-teal-400"
+                />
               </div>
+
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-10 rounded-2xl border-0 bg-teal-50/80 px-3 text-sm text-teal-900 focus:ring-0 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <SelectValue placeholder="Filter by category" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="routine">Routine</SelectItem>
+                  <SelectItem value="specialist">Specialist</SelectItem>
+                  <SelectItem value="lab">Laboratory</SelectItem>
+                  <SelectItem value="imaging">Imaging</SelectItem>
+                  <SelectItem value="emergency">Emergency</SelectItem>
+                  <SelectItem value="followup">Follow‑up</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </Card>
-        ))}
-      </div>
 
-      {filteredReports.length === 0 && (
-        <Card className="p-12 text-center">
-          <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-500">No reports found matching your search</p>
-        </Card>
-      )}
+          {/* Small chips */}
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            <div className="flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-teal-900">
+              <span className="h-2 w-2 rounded-full bg-teal-500" />
+              Showing <span className="font-semibold">{filteredReports.length}</span> reports
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-blue-900">
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              Latest record:{' '}
+              <span className="font-semibold">{medicalReports[0].date}</span>
+            </div>
+          </div>
 
-      {/* Quick Actions */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50">
-        <h3 className="text-lg text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <button className="p-4 bg-white rounded-lg hover:shadow-md transition-shadow text-left">
-            <FileText className="w-5 h-5 text-blue-600 mb-2" />
-            <p className="text-sm text-gray-900">Request Medical Records</p>
-          </button>
-          <button className="p-4 bg-white rounded-lg hover:shadow-md transition-shadow text-left">
-            <Download className="w-5 h-5 text-green-600 mb-2" />
-            <p className="text-sm text-gray-900">Download All Reports</p>
-          </button>
-          <button className="p-4 bg-white rounded-lg hover:shadow-md transition-shadow text-left">
-            <Calendar className="w-5 h-5 text-purple-600 mb-2" />
-            <p className="text-sm text-gray-900">Schedule Appointment</p>
-          </button>
+          {/* Timeline style list */}
+          <div className="space-y-3">
+            {filteredReports.length === 0 && (
+              <Card className="border-dashed border-teal-100 bg-teal-50/40 py-10 text-center text-sm text-gray-500">
+                No reports found matching your search.
+              </Card>
+            )}
+
+            {filteredReports.map((report, index) => (
+              <div
+                key={report.id}
+                className="relative overflow-hidden rounded-3xl border border-teal-50 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  {/* Left timeline icon */}
+                  <div className="flex flex-col items-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-500 text-white shadow-md">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    {index !== filteredReports.length - 1 && (
+                      <div className="mt-2 h-full w-0.5 rounded-full bg-teal-50" />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            {report.title}
+                          </h3>
+                          <Badge
+                            className={`${getCategoryBadge(
+                              report.category,
+                            )} rounded-full px-2.5 py-0.5 text-[10px] font-medium`}
+                          >
+                            {report.type}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-500">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {report.date}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <User className="h-3.5 w-3.5" />
+                            {report.doctor}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button className="inline-flex items-center gap-1.5 rounded-full bg-teal-500 px-3 py-1.5 text-[11px] font-medium text-white shadow-sm transition hover:bg-teal-600">
+                        <Download className="h-3.5 w-3.5" />
+                        Download
+                      </button>
+                    </div>
+
+                    <p className="mt-2 text-[12px] text-gray-600">
+                      {report.summary}
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>{report.file}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* soft highlight */}
+                <div className="pointer-events-none absolute -right-10 -top-10 h-16 w-16 rounded-full bg-teal-100/80 blur-2xl" />
+              </div>
+            ))}
+          </div>
+
+          {/* Quick actions bar */}
+          <Card className="mt-4 border-0 bg-linear-to-r from-teal-50 to-blue-50 rounded-3xl p-4">
+            <h3 className="mb-3 text-sm font-semibold text-gray-900">
+              Quick actions
+            </h3>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <button className="rounded-2xl bg-white p-4 text-left text-xs text-gray-900 shadow-sm transition hover:shadow-md">
+                <FileText className="mb-2 h-5 w-5 text-blue-600" />
+                Request medical records
+              </button>
+              <button className="rounded-2xl bg-white p-4 text-left text-xs text-gray-900 shadow-sm transition hover:shadow-md">
+                <Download className="mb-2 h-5 w-5 text-emerald-600" />
+                Download all reports
+              </button>
+              <button className="rounded-2xl bg-white p-4 text-left text-xs text-gray-900 shadow-sm transition hover:shadow-md">
+                <Calendar className="mb-2 h-5 w-5 text-purple-600" />
+                Schedule follow‑up appointment
+              </button>
+            </div>
+          </Card>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
