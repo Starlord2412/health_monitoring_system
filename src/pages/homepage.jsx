@@ -15,7 +15,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const goToLogin = () => {
-    navigate("/signup");
+    navigate("/login");
   };
 
   const getStartedRef = useRef(null);
@@ -74,7 +74,7 @@ export default function HomePage() {
         <Button
           onClick={handleClick}
           size="lg"
-          className="rounded-xl bg-emerald-600 px-10 h-14 text-lg text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700"
+          className="rounded-xl  bg-emerald-600 px-10 h-14 text-lg text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700"
         >
           Get Started
         </Button>

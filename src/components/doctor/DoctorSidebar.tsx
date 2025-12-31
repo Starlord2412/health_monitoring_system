@@ -1,3 +1,5 @@
+//doctor sidebar
+
 import { NavLink } from "react-router-dom";
 import { Activity, Users, Bell, FileText, Pill, MessageSquare, LogOut } from "lucide-react";
 
