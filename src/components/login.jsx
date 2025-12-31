@@ -222,7 +222,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg ${
+            className={`w-full bg-linear-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg ${
               isLoading
                 ? 'opacity-50 cursor-not-allowed'
                 : 'hover:from-teal-600 hover:to-teal-700 hover:shadow-xl transform hover:scale-105'

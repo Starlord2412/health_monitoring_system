@@ -135,7 +135,7 @@ export default function SignupPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-teal-500 to-teal-700 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
           <div className="mb-6 flex justify-center">
             <div className="bg-green-100 rounded-full p-4">
@@ -159,7 +159,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-500 via-teal-400 to-cyan-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-teal-500 via-teal-400 to-cyan-500 flex items-center justify-center p-4">
       {/* Background decoration */}
       <div className="absolute top-10 left-10 opacity-20">
         <Heart size={40} className="text-white animate-pulse" />
@@ -337,7 +337,7 @@ export default function SignupPage() {
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg mt-8 ${
+            className={`w-full bg-linear-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg mt-8 ${
               isLoading
                 ? 'opacity-50 cursor-not-allowed'
                 : 'hover:from-teal-600 hover:to-teal-700 hover:shadow-xl transform hover:scale-105'
