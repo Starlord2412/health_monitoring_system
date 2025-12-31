@@ -279,7 +279,7 @@ export default function ReportsPage() {
                       <FileText className="h-5 w-5" />
                     </div>
                     {index !== filteredReports.length - 1 && (
-                      <div className="mt-2 h-full w-[2px] rounded-full bg-teal-50" />
+                      <div className="mt-2 h-full w-0.5 rounded-full bg-teal-50" />
                     )}
                   </div>
 
@@ -335,7 +335,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Quick actions bar */}
-          <Card className="mt-4 border-0 bg-gradient-to-r from-teal-50 to-blue-50 rounded-3xl p-4">
+          <Card className="mt-4 border-0 bg-linear-to-r from-teal-50 to-blue-50 rounded-3xl p-4">
             <h3 className="mb-3 text-sm font-semibold text-gray-900">
               Quick actions
             </h3>
