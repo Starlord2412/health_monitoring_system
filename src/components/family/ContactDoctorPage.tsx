@@ -150,7 +150,7 @@ export default function ContactDoctorPage() {
                           <SelectItem
                             key={doctor.id}
                             value={doctor.id.toString()}
-                            className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-[highlighted]:bg-teal-500 data-[highlighted]:text-white data-[highlighted]:outline-none"
+                            className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
                           >
                             {doctor.name} – {doctor.specialty}
                           </SelectItem>
@@ -167,19 +167,19 @@ export default function ContactDoctorPage() {
                       <SelectContent className="rounded-2xl border border-teal-100 bg-[#E6F5F2] shadow-lg">
                         <SelectItem
                           value="routine"
-                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-[highlighted]:bg-teal-500 data-[highlighted]:text-white data-[highlighted]:outline-none"
+                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
                         >
                           Routine
                         </SelectItem>
                         <SelectItem
                           value="soon"
-                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-[highlighted]:bg-teal-500 data-[highlighted]:text-white data-[highlighted]:outline-none"
+                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
                         >
                           Within 24 hours
                         </SelectItem>
                         <SelectItem
                           value="urgent"
-                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-[highlighted]:bg-teal-500 data-[highlighted]:text-white data-[highlighted]:outline-none"
+                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
                         >
                           Urgent (same day)
                         </SelectItem>
@@ -201,7 +201,7 @@ export default function ContactDoctorPage() {
                 <div>
                   <Label className="text-xs text-gray-700">Message</Label>
                   <Textarea
-                    className="mt-1 min-h-[140px] rounded-2xl border-0 bg-white/80 text-sm focus-visible:ring-1 focus-visible:ring-teal-400"
+                    className="mt-1 min-h-35 rounded-2xl border-0 bg-white/80 text-sm focus-visible:ring-1 focus-visible:ring-teal-400"
                     placeholder="Write your message with relevant details, symptoms, or questions..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
