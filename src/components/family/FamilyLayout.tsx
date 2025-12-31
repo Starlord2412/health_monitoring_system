@@ -1,4 +1,5 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+
 import {
   LayoutDashboard,
   Bell,
@@ -10,6 +11,7 @@ import {
 
 export default function FamilyLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { name: 'Home', path: '/family/dashboard', icon: LayoutDashboard },
@@ -19,8 +21,10 @@ export default function FamilyLayout() {
     { name: 'Consult', path: '/family/contact-doctor', icon: MessageSquare },
   ];
 
-  const handleLogout = () => {
-    console.log('Logout clicked');
+
+   const handleLogout = () => {
+     navigate('/', { replace: true });
+    alert('Logout clicked'); // 👈 main home page pe redirect
   };
 
   return (
