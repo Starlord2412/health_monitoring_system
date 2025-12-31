@@ -15,7 +15,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const goToLogin = () => {
-    navigate("/signup");
+    navigate("/login");
   };
 
   const getStartedRef = useRef(null);

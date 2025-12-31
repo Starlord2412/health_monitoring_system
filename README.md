@@ -6,7 +6,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate()
   const location = useLocation();
-  const roleFromSignup = location.state?.role || "";
+  const roleFromSignup = location.state?.role ;
 
 
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    role: roleFromSignup || '',
+  
 
   });
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
         setFormData({
           username: '',
           password: '',
-          role: roleFromSignup || '',
+         
         });
       }, 1000);
     }
@@ -80,22 +80,15 @@ export default function LoginPage() {
   };
 
 
-  const roleRoutes = {
-  doctor: '/doctor',
-  patient: '/patient',
-  admin: '/admin',
-  family: '/family',
-};
-
 
 
 
   useEffect(() => {
     if (submitted) {
-      const role = String(formData.role || roleFromSignup || '').toLowerCase();
+      const role = String(formData.role || roleFromSignup ).toLowerCase();
     
-
-      const target = role === 'doctor' ? '/doctor' : '/family';
+console.log(role)
+      const target = role === 'doctor' ? '/doctor' : '/';
       const timer = setTimeout(() => navigate(target, { replace: true }), 800);
       return () => clearTimeout(timer);
     }

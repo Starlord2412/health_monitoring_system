@@ -1,7 +1,14 @@
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { Pill, Clock, CheckCircle2, XCircle, AlertCircle, Calendar } from 'lucide-react';
+import {
+  Pill,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Calendar,
+} from 'lucide-react';
 
 const medications = [
   {
@@ -73,209 +80,211 @@ const weeklySchedule = [
 
 export default function MedicationPage() {
   const overallCompliance = Math.round(
-    medications.reduce((sum, med) => sum + med.compliance, 0) / medications.length
+    medications.reduce((sum, med) => sum + med.compliance, 0) / medications.length,
   );
-
   const todayTaken = medications.filter((med) => med.taken).length;
   const totalToday = medications.length;
+  const missedThisWeek = weeklySchedule.reduce(
+    (sum, day) => sum + (day.total - day.taken),
+    0,
+  );
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h2 className="text-3xl text-gray-900 mb-2">Medication Monitor</h2>
-        <p className="text-gray-600">Track medication adherence and compliance</p>
-      </div>
+    <div className="min-h-screen bg-[#C9E6E2] px-6 py-6 flex justify-center">
+      <div className="w-full max-w-6xl">
+        {/* Header like mobile hero */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
+              Medication center
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-teal-950">
+              Daily medication tracking
+            </h1>
+            <p className="mt-1 text-sm text-teal-900/80">
+              Check schedule, adherence, and upcoming doses in one clean view.
+            </p>
+          </div>
 
-      {/* Overall Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 bg-gradient-to-r from-green-500 to-green-600 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-green-100 mb-1">Overall Compliance</p>
-              <h3 className="text-4xl">{overallCompliance}%</h3>
+          <div className="flex gap-3">
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">Today taken</p>
+              <p className="text-lg font-semibold text-teal-600">
+                {todayTaken}/{totalToday}
+              </p>
             </div>
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              <Pill className="w-8 h-8" />
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">Missed this week</p>
+              <p className="text-lg font-semibold text-red-500">{missedThisWeek}</p>
             </div>
           </div>
-          <Progress value={overallCompliance} className="h-2 bg-white/20" />
-        </Card>
+        </div>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-blue-600" />
-            </div>
+        {/* Main glass card */}
+        <div className="rounded-3xl bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,118,110,0.18)] backdrop-blur">
+          {/* Top stats row inside card */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-white/90 border-0 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-gray-500">Overall compliance</span>
+                <CheckCircle2 className="text-teal-600" size={18} />
+              </div>
+              <p className="text-2xl font-semibold text-teal-600">
+                {overallCompliance}%
+              </p>
+              <Progress value={overallCompliance} className="mt-3 h-2 rounded-full" />
+            </Card>
+
+            <Card className="bg-white/90 border-0 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-gray-500">Today&apos;s doses</span>
+                <Clock className="text-blue-500" size={18} />
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">
+                {todayTaken}/{totalToday}
+              </p>
+              <p className="mt-1 text-[11px] text-gray-500">Taken so far today</p>
+            </Card>
+
+            <Card className="bg-white/90 border-0 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-gray-500">Missed this week</span>
+                <XCircle className="text-red-500" size={18} />
+              </div>
+              <p className="text-2xl font-semibold text-red-500">{missedThisWeek}</p>
+              <p className="mt-1 text-[11px] text-gray-500">Out of 42 doses</p>
+            </Card>
+
+            <Card className="bg-white/90 border-0 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-gray-500">Next dose</span>
+                <Calendar className="text-purple-500" size={18} />
+              </div>
+              <p className="text-sm text-gray-800">
+                In <span className="font-semibold text-teal-600">2 hours</span>
+              </p>
+              <p className="mt-1 text-[11px] text-gray-500">
+                Stay on track with reminders.
+              </p>
+            </Card>
           </div>
-          <p className="text-gray-600 mb-1">Today's Progress</p>
-          <h3 className="text-3xl text-gray-900 mb-2">
-            {todayTaken}/{totalToday}
-          </h3>
-          <Progress value={(todayTaken / totalToday) * 100} className="h-2" />
-        </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-          <p className="text-gray-600 mb-1">Missed This Week</p>
-          <h3 className="text-3xl text-gray-900">3</h3>
-          <p className="text-sm text-gray-600 mt-2">Out of 42 doses</p>
-        </Card>
-      </div>
-
-      {/* Weekly Overview */}
-      <Card className="p-6">
-        <h3 className="text-lg text-gray-900 mb-4">Weekly Adherence</h3>
-        <div className="grid grid-cols-7 gap-2">
-          {weeklySchedule.map((day) => {
-            const compliancePercent = (day.taken / day.total) * 100;
-            return (
-              <div key={day.day} className="text-center">
-                <p className="text-sm text-gray-600 mb-2">{day.day}</p>
-                <div className="h-24 bg-gray-100 rounded-lg relative overflow-hidden">
+          {/* Bottom layout: weekly + meds */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Weekly schedule card (left) */}
+            <Card className="lg:col-span-1 bg-white/90 border-0 rounded-3xl p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                <Calendar className="text-teal-600" size={18} />
+                Weekly schedule
+              </h3>
+              <div className="space-y-2.5">
+                {weeklySchedule.map((day) => (
                   <div
-                    className={`absolute bottom-0 left-0 right-0 transition-all ${
-                      compliancePercent === 100
-                        ? 'bg-green-500'
-                        : compliancePercent >= 80
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                    }`}
-                    style={{ height: `${compliancePercent}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  {day.taken}/{day.total}
-                </p>
+                    key={day.day}
+                    className="flex items-center justify-between rounded-2xl bg-teal-50/70 px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{day.day}</p>
+                      <p className="text-[11px] text-gray-600">
+                        Morning: {day.morning} • Evening: {day.evening}
+                      </p>
+                    </div>
+                    <Badge className="rounded-full bg-white text-teal-700 text-[11px] font-semibold px-3 py-1">
+                      {day.taken}/{day.total}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-            );
-          })}
+            </Card>
+
+            {/* Meds list card (right) */}
+            <Card className="lg:col-span-2 bg-white/90 border-0 rounded-3xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <Pill className="text-teal-600" size={18} />
+                  Current medications
+                </h3>
+                <Badge className="rounded-full bg-teal-50 text-teal-800 px-3 py-1 text-[11px] font-semibold">
+                  {medications.length} active
+                </Badge>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {medications.map((medication) => (
+                  <div
+                    key={medication.id}
+                    className="relative overflow-hidden rounded-3xl border border-teal-50 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon bubble like avatar */}
+                      <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-500 text-white shadow-md">
+                        <Pill className="h-5 w-5" />
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {medication.name}
+                          </p>
+                          <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-800">
+                            {medication.dosage}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-gray-500">
+                          {medication.frequency}
+                        </p>
+                        <p className="mt-1 text-[11px] text-teal-800">
+                          Purpose: {medication.purpose}
+                        </p>
+
+                        <div className="mt-2 flex flex-col gap-1 text-[11px] text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5 text-gray-400" />
+                            <span>Schedule: {medication.time}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {medication.taken ? (
+                              <>
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                <span className="text-emerald-700">
+                                  Taken • Last: {medication.lastTaken}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                                <span className="text-red-600">
+                                  Missed • Last: {medication.lastTaken}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500">Compliance:</span>
+                            <span className="font-semibold text-gray-900">
+                              {medication.compliance}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* soft gradient highlight */}
+                    <div className="pointer-events-none absolute -right-10 -top-10 h-16 w-16 rounded-full bg-teal-100/80 blur-2xl" />
+                  </div>
+                ))}
+              </div>
+
+              {todayTaken === totalToday && (
+                <div className="mt-4 flex items-center gap-2 rounded-2xl bg-teal-50 px-3 py-2 text-xs font-medium text-teal-800">
+                  <CheckCircle2 className="h-4 w-4" />
+                  All medications taken for today!
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
-      </Card>
-
-      {/* Medication List */}
-      <div className="space-y-4">
-        <h3 className="text-lg text-gray-900">Current Medications</h3>
-        {medications.map((medication) => (
-          <Card key={medication.id} className="p-6">
-            <div className="flex items-start gap-4">
-              <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  medication.taken ? 'bg-green-100' : 'bg-gray-100'
-                }`}
-              >
-                {medication.taken ? (
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                ) : (
-                  <Pill className="w-6 h-6 text-gray-600" />
-                )}
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h4 className="text-lg text-gray-900">{medication.name}</h4>
-                      <Badge variant="outline">{medication.dosage}</Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">{medication.purpose}</p>
-                  </div>
-                  {medication.taken ? (
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
-                      Taken
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-200">
-                      Pending
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <div>
-                      <p className="text-xs text-gray-500">Schedule</p>
-                      <p>{medication.time}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4" />
-                    <div>
-                      <p className="text-xs text-gray-500">Frequency</p>
-                      <p>{medication.frequency}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <div>
-                      <p className="text-xs text-gray-500">Last Taken</p>
-                      <p>{medication.lastTaken}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Compliance Rate</span>
-                    <span className="text-sm text-gray-900">{medication.compliance}%</span>
-                  </div>
-                  <Progress
-                    value={medication.compliance}
-                    className={`h-2 ${
-                      medication.compliance >= 95
-                        ? '[&>div]:bg-green-500'
-                        : medication.compliance >= 80
-                        ? '[&>div]:bg-yellow-500'
-                        : '[&>div]:bg-red-500'
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
       </div>
-
-      {/* Upcoming Doses */}
-      <Card className="p-6">
-        <h3 className="text-lg text-gray-900 mb-4">Upcoming Doses Today</h3>
-        <div className="space-y-3">
-          {medications
-            .filter((med) => !med.taken)
-            .map((med) => (
-              <div
-                key={med.id}
-                className="flex items-center justify-between p-4 bg-blue-50 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Pill className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-900">{med.name}</p>
-                    <p className="text-sm text-gray-600">{med.dosage}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-900">{med.time}</p>
-                  <p className="text-xs text-gray-600">{med.frequency}</p>
-                </div>
-              </div>
-            ))}
-          {medications.filter((med) => !med.taken).length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-500" />
-              <p>All medications taken for today!</p>
-            </div>
-          )}
-        </div>
-      </Card>
     </div>
   );
 }

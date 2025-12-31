@@ -5,8 +5,23 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
-import { Phone, Mail, MapPin, Clock, MessageSquare, Send, User, Calendar } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  MessageSquare,
+  Send,
+  User,
+  Calendar,
+} from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 const doctors = [
   {
@@ -17,7 +32,7 @@ const doctors = [
     email: 'dr.johnson@healthcare.com',
     location: 'Main Medical Center, Floor 3',
     availability: 'Mon-Fri, 9:00 AM - 5:00 PM',
-    image: '👩‍⚕️',
+    image: '👩⚕️',
   },
   {
     id: 2,
@@ -27,7 +42,7 @@ const doctors = [
     email: 'dr.chen@healthcare.com',
     location: 'Heart Center, Floor 5',
     availability: 'Mon, Wed, Fri, 8:00 AM - 4:00 PM',
-    image: '👨‍⚕️',
+    image: '👨⚕️',
   },
   {
     id: 3,
@@ -37,7 +52,7 @@ const doctors = [
     email: 'dr.rodriguez@healthcare.com',
     location: 'Specialty Clinic, Floor 2',
     availability: 'Tue, Thu, 10:00 AM - 6:00 PM',
-    image: '👩‍⚕️',
+    image: '👩⚕️',
   },
 ];
 
@@ -76,212 +91,212 @@ export default function ContactDoctorPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
     console.log({ selectedDoctor, subject, message, urgency });
-    // Reset form
     setSelectedDoctor('');
     setSubject('');
     setMessage('');
     setUrgency('routine');
   };
 
+  const currentDoctor = doctors.find((d) => d.id.toString() === selectedDoctor) || doctors[0];
+
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h2 className="text-3xl text-gray-900 mb-2">Contact Doctor</h2>
-        <p className="text-gray-600">Communicate with your healthcare providers</p>
+    <div className="min-h-screen bg-gray-100 p-6">
+      {/* Header */}
+      <div className="bg-teal-500 text-gray-900 p-6 rounded-lg mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Contact your doctor</h2>
+            <p className="text-sm">
+              Communicate with your healthcare providers, ask questions, and request follow-ups.
+            </p>
+          </div>
+          <Badge className="bg-white text-teal-700 font-semibold px-3 py-1 rounded-full">
+            Secure messaging
+          </Badge>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Contact Form */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg text-gray-900 mb-4">Send a Message</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left: form */}
+        <div className="xl:col-span-2 space-y-6">
+          <Card className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+              <MessageSquare className="text-teal-600" size={20} />
+              Send a message
+            </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="doctor">Select Doctor</Label>
-                <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                  <SelectTrigger id="doctor">
-                    <SelectValue placeholder="Choose a doctor..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                        {doctor.name} - {doctor.specialty}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-gray-700">Doctor</Label>
+                  <Select
+                    value={selectedDoctor}
+                    onValueChange={(value) => setSelectedDoctor(value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select doctor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors.map((doctor) => (
+                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                          {doctor.name} – {doctor.specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-700">Urgency</Label>
+                  <Select value={urgency} onValueChange={(value) => setUrgency(value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="routine">Routine</SelectItem>
+                      <SelectItem value="soon">Within 24 hours</SelectItem>
+                      <SelectItem value="urgent">Urgent (same day)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="urgency">Urgency Level</Label>
-                <Select value={urgency} onValueChange={setUrgency}>
-                  <SelectTrigger id="urgency">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="routine">Routine</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                    <SelectItem value="emergency">Emergency</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="subject">Subject</Label>
+                <Label className="text-sm text-gray-700">Subject</Label>
                 <Input
-                  id="subject"
-                  placeholder="Enter message subject..."
+                  className="mt-1"
+                  placeholder="e.g., Follow-up on blood pressure readings"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  required
                 />
               </div>
 
               <div>
-                <Label htmlFor="message">Message</Label>
+                <Label className="text-sm text-gray-700">Message</Label>
                 <Textarea
-                  id="message"
-                  placeholder="Type your message here..."
-                  rows={6}
+                  className="mt-1 min-h-[140px]"
+                  placeholder="Write your message with relevant details, symptoms, or questions..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  required
                 />
               </div>
 
-              <Button type="submit" className="w-full">
-                <Send className="w-4 h-4 mr-2" />
-                Send Message
-              </Button>
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-gray-500 max-w-sm">
+                  For medical emergencies, please call 911 or visit the nearest emergency room.
+                  For urgent medical questions, contact our 24/7 hotline.
+                </p>
+                <Button
+                  type="submit"
+                  className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded-lg"
+                >
+                  <Send size={16} />
+                  Send
+                </Button>
+              </div>
             </form>
           </Card>
 
-          {/* Recent Messages */}
-          <Card className="p-6">
-            <h3 className="text-lg text-gray-900 mb-4">Recent Messages</h3>
+          {/* Recent messages */}
+          <Card className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+              <Mail className="text-teal-600" size={20} />
+              Recent messages
+            </h3>
             <div className="space-y-3">
               {recentMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="bg-gray-50 border border-gray-100 p-3 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between gap-2"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <MessageSquare className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-900">{msg.subject}</p>
-                        <p className="text-xs text-gray-600">{msg.doctor}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        className={
-                          msg.status === 'replied'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }
-                      >
-                        {msg.status}
-                      </Badge>
-                      <span className="text-xs text-gray-500">{msg.date}</span>
-                    </div>
+                  <div>
+                    <p className="text-sm font-semibold">{msg.subject}</p>
+                    <p className="text-xs text-gray-500">
+                      {msg.doctor} • {msg.date}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-1">
+                      {msg.preview}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-1">{msg.preview}</p>
+                  <Badge
+                    className={
+                      msg.status === 'replied'
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'bg-yellow-50 text-yellow-700'
+                    }
+                  >
+                    {msg.status === 'replied' ? 'Replied' : 'Pending'}
+                  </Badge>
                 </div>
               ))}
             </div>
           </Card>
         </div>
 
-        {/* Doctor Cards */}
-        <div className="space-y-4">
-          <h3 className="text-lg text-gray-900">Your Care Team</h3>
-          {doctors.map((doctor) => (
-            <Card key={doctor.id} className="p-6">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 mx-auto mb-3 text-4xl">{doctor.image}</div>
-                <h4 className="text-gray-900">{doctor.name}</h4>
-                <p className="text-sm text-gray-600">{doctor.specialty}</p>
+        {/* Right: doctor info */}
+        <div className="space-y-6">
+          <Card className="bg-teal-50 border border-gray-200 p-6 rounded-lg">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+              <User className="text-teal-700" size={20} />
+              Doctor details
+            </h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-2xl">
+                {currentDoctor.image}
               </div>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <Phone className="w-4 h-4 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-gray-600">Phone</p>
-                    <p className="text-gray-900">{doctor.phone}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-gray-600">Email</p>
-                    <p className="text-gray-900 text-xs">{doctor.email}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-gray-600">Location</p>
-                    <p className="text-gray-900">{doctor.location}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-gray-600">Availability</p>
-                    <p className="text-gray-900">{doctor.availability}</p>
-                  </div>
+              <div>
+                <p className="text-sm font-semibold">{currentDoctor.name}</p>
+                <p className="text-xs text-gray-600">{currentDoctor.specialty}</p>
+              </div>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-2">
+                <Phone className="text-teal-700 mt-0.5" size={16} />
+                <div>
+                  <p className="font-semibold text-gray-800">Phone</p>
+                  <p className="text-gray-600">{currentDoctor.phone}</p>
                 </div>
               </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
-                <Button variant="outline" className="w-full text-sm">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call Now
-                </Button>
-                <Button variant="outline" className="w-full text-sm">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule Appointment
-                </Button>
+              <div className="flex items-start gap-2">
+                <Mail className="text-teal-700 mt-0.5" size={16} />
+                <div>
+                  <p className="font-semibold text-gray-800">Email</p>
+                  <p className="text-gray-600">{currentDoctor.email}</p>
+                </div>
               </div>
-            </Card>
-          ))}
+              <div className="flex items-start gap-2">
+                <MapPin className="text-teal-700 mt-0.5" size={16} />
+                <div>
+                  <p className="font-semibold text-gray-800">Location</p>
+                  <p className="text-gray-600">{currentDoctor.location}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Clock className="text-teal-700 mt-0.5" size={16} />
+                <div>
+                  <p className="font-semibold text-gray-800">Availability</p>
+                  <p className="text-gray-600">{currentDoctor.availability}</p>
+                </div>
+              </div>
+            </div>
+            <Button className="w-full mt-4 bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center gap-2">
+              <Phone size={16} />
+              Call clinic
+            </Button>
+          </Card>
+
+          <Card className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-3">
+              <Calendar className="text-teal-600" size={20} />
+              Appointment tips
+            </h3>
+            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <li>Prepare recent readings (BP, sugar, symptoms) before contacting.</li>
+              <li>Mention all current medications and allergies.</li>
+              <li>For urgent issues, call instead of sending a routine message.</li>
+            </ul>
+          </Card>
         </div>
       </div>
-
-      {/* Emergency Contact */}
-      <Card className="p-6 bg-red-50 border-red-200">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center shrink-0">
-            <Phone className="w-6 h-6 text-red-600" />
-          </div>
-          <div>
-            <h3 className="text-lg text-gray-900 mb-2">Emergency Contact</h3>
-            <p className="text-gray-700 mb-4">
-              For medical emergencies, please call 911 or visit the nearest emergency room.
-              For urgent medical questions, contact our 24/7 hotline.
-            </p>
-            <div className="flex items-center gap-4">
-              <Button className="bg-red-600 hover:bg-red-700">
-                <Phone className="w-4 h-4 mr-2" />
-                Call Emergency: 911
-              </Button>
-              <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
-                <Phone className="w-4 h-4 mr-2" />
-                24/7 Hotline: (555) 999-0000
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

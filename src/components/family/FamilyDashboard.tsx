@@ -1,7 +1,24 @@
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Activity, Heart, Thermometer, Wind, MapPin, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Activity,
+  Heart,
+  Thermometer,
+  Wind,
+  MapPin,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 const vitalsData = [
   { time: '8:00', heartRate: 72, bp: 120 },
@@ -13,179 +30,248 @@ const vitalsData = [
 ];
 
 const recentAlerts = [
-  { id: 1, type: 'Fall Detected', time: '2 hours ago', severity: 'high', location: 'Living Room' },
-  { id: 2, type: 'BP High', time: '5 hours ago', severity: 'medium', location: 'Bedroom' },
-  { id: 3, type: 'Medication Missed', time: '1 day ago', severity: 'low', location: 'Kitchen' },
+  {
+    id: 1,
+    type: 'Fall detected',
+    time: '2 hours ago',
+    severity: 'high',
+    location: 'Living Room',
+  },
+  {
+    id: 2,
+    type: 'BP high',
+    time: '5 hours ago',
+    severity: 'medium',
+    location: 'Bedroom',
+  },
+  {
+    id: 3,
+    type: 'Medication missed',
+    time: '1 day ago',
+    severity: 'low',
+    location: 'Kitchen',
+  },
 ];
 
 export default function FamilyDashboard() {
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h2 className="text-3xl text-gray-900 mb-2">Family Dashboard</h2>
-        <p className="text-gray-600">Monitor your loved one's health in real-time</p>
-      </div>
-
-      {/* Health Score */}
-      <Card className="p-6 bg-linear-to-r from-blue-500 to-blue-600 text-white">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-[#C9E6E2] px-6 py-6 flex justify-center">
+      <div className="w-full max-w-6xl">
+        {/* Header / Hero */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-blue-100 mb-1">Overall Health Score</p>
-            <h3 className="text-4xl">87/100</h3>
+            <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
+              Family dashboard
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold text-teal-950">
+              Family health overview
+            </h2>
+            <p className="mt-1 text-sm text-teal-900/80">
+              Monitor vitals, activity, and alerts for your loved one in real time.
+            </p>
           </div>
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-            <Activity className="w-8 h-8" />
+
+          <div className="flex gap-3">
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">Health score</p>
+              <p className="text-lg font-semibold text-teal-700">85</p>
+            </div>
+            <div className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+              <p className="text-[11px] text-gray-500">Alerts (24h)</p>
+              <p className="text-lg font-semibold text-orange-600">
+                {recentAlerts.length}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4" />
-          <span className="text-sm">+5 from last week</span>
-        </div>
-      </Card>
 
-      {/* Real-time Vitals */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <Heart className="w-5 h-5 text-red-600" />
-            </div>
-            <Badge variant="outline" className="text-xs">Live</Badge>
-          </div>
-          <p className="text-gray-600 text-sm mb-1">Heart Rate</p>
-          <h4 className="text-2xl text-gray-900">73 bpm</h4>
-          <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            Normal
-          </p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Activity className="w-5 h-5 text-blue-600" />
-            </div>
-            <Badge variant="outline" className="text-xs">Live</Badge>
-          </div>
-          <p className="text-gray-600 text-sm mb-1">Blood Pressure</p>
-          <h4 className="text-2xl text-gray-900">118/79</h4>
-          <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            Optimal
-          </p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Thermometer className="w-5 h-5 text-orange-600" />
-            </div>
-            <Badge variant="outline" className="text-xs">Live</Badge>
-          </div>
-          <p className="text-gray-600 text-sm mb-1">Temperature</p>
-          <h4 className="text-2xl text-gray-900">98.6°F</h4>
-          <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            Normal
-          </p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Wind className="w-5 h-5 text-purple-600" />
-            </div>
-            <Badge variant="outline" className="text-xs">Live</Badge>
-          </div>
-          <p className="text-gray-600 text-sm mb-1">Oxygen Level</p>
-          <h4 className="text-2xl text-gray-900">98%</h4>
-          <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            Excellent
-          </p>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Vitals Chart */}
-        <Card className="p-6">
-          <h3 className="text-lg text-gray-900 mb-4">Vitals Over Time</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={vitalsData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="heartRate" stroke="#3b82f6" strokeWidth={2} name="Heart Rate" />
-              <Line type="monotone" dataKey="bp" stroke="#10b981" strokeWidth={2} name="Systolic BP" />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Recent Alerts */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg text-gray-900">Recent Alerts</h3>
-            <Badge className="bg-red-100 text-red-700 hover:bg-red-200">
-              {recentAlerts.length} Active
-            </Badge>
-          </div>
-          <div className="space-y-3">
-            {recentAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className={`p-4 rounded-lg border ${
-                  alert.severity === 'high'
-                    ? 'bg-red-50 border-red-200'
-                    : alert.severity === 'medium'
-                    ? 'bg-orange-50 border-orange-200'
-                    : 'bg-yellow-50 border-yellow-200'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <AlertTriangle
-                    className={`w-5 h-5 mt-0.5 ${
-                      alert.severity === 'high'
-                        ? 'text-red-600'
-                        : alert.severity === 'medium'
-                        ? 'text-orange-600'
-                        : 'text-yellow-600'
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-gray-900">{alert.type}</p>
-                      <span className="text-xs text-gray-600">{alert.time}</span>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-600">
-                      <MapPin className="w-3 h-3" />
-                      <span>{alert.location}</span>
-                    </div>
-                  </div>
-                </div>
+        {/* Main glass card */}
+        <div className="rounded-3xl bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,118,110,0.18)] backdrop-blur space-y-5">
+          {/* Top stats inside card */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="bg-white/90 rounded-2xl border-0 p-4 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">
+                  Overall health score
+                </span>
+                <TrendingUp className="text-teal-600" size={18} />
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+              <p className="text-2xl font-semibold text-teal-600">85</p>
+              <p className="mt-1 text-[11px] text-gray-500">
+                Good, stable condition
+              </p>
+            </Card>
 
-      {/* Current Location */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg text-gray-900">Current Location</h3>
-          <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
-        </div>
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
-            <MapPin className="w-6 h-6 text-blue-600" />
+            <Card className="bg-white/90 rounded-2xl border-0 p-4 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Heart rate</span>
+                <Heart className="text-red-500" size={18} />
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">72</p>
+              <p className="mt-1 text-[11px] text-gray-500">Average today (bpm)</p>
+            </Card>
+
+            <Card className="bg-white/90 rounded-2xl border-0 p-4 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Blood pressure</span>
+                <Activity className="text-blue-500" size={18} />
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">120/80</p>
+              <p className="mt-1 text-[11px] text-gray-500">Within normal range</p>
+            </Card>
+
+            <Card className="bg-white/90 rounded-2xl border-0 p-4 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Oxygen level</span>
+                <Wind className="text-teal-500" size={18} />
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">98%</p>
+              <p className="mt-1 text-[11px] text-gray-500">
+                Stable oxygen saturation
+              </p>
+            </Card>
           </div>
-          <div>
-            <p className="text-gray-900">Living Room</p>
-            <p className="text-sm text-gray-600 mt-1">Last fall detected at this location 2 hours ago</p>
-            <p className="text-xs text-gray-500 mt-2">GPS: 40.7128° N, 74.0060° W</p>
+
+          {/* Middle: vitals chart + side quick cards */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            {/* Vitals trend */}
+            <Card className="lg:col-span-2 bg-white/90 rounded-3xl border-0 p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                  <Activity className="text-teal-600" size={18} />
+                  Vitals trend
+                </h3>
+                <Badge className="rounded-full bg-teal-50 px-3 py-1 text-[11px] font-semibold text-teal-700">
+                  Today
+                </Badge>
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={vitalsData}>
+                    <CartesianGrid strokeDasharray="3 3" className="text-gray-200" />
+                    <XAxis dataKey="time" stroke="#6b7280" />
+                    <YAxis stroke="#6b7280" />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="heartRate"
+                      stroke="#14b8a6"
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="bp"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Quick vitals mini cards */}
+            <div className="space-y-3">
+              <Card className="bg-teal-50/80 rounded-2xl border-0 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-500">Temperature</span>
+                  <Thermometer className="text-orange-500" size={18} />
+                </div>
+                <p className="text-xl font-semibold text-gray-900">98.6°F</p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  Normal body temperature
+                </p>
+              </Card>
+
+              <Card className="bg-teal-50/80 rounded-2xl border-0 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-500">Activity</span>
+                  <Activity className="text-green-500" size={18} />
+                </div>
+                <p className="text-xl font-semibold text-gray-900">4,250</p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  Steps completed today
+                </p>
+              </Card>
+
+              <Card className="bg-teal-50/80 rounded-2xl border-0 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-500">Trend</span>
+                  <TrendingDown className="text-yellow-500" size={18} />
+                </div>
+                <p className="text-xl font-semibold text-gray-900">Slightly down</p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  Compared to last week
+                </p>
+              </Card>
+            </div>
+          </div>
+
+          {/* Bottom: alerts + location */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            {/* Recent alerts – same chip style as alerts page */}
+            <Card className="lg:col-span-2 bg-white/90 rounded-3xl border-0 p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                  <AlertTriangle className="text-orange-500" size={18} />
+                  Recent alerts
+                </h3>
+                <span className="text-[11px] text-gray-500">Last 24 hours</span>
+              </div>
+              <div className="space-y-3">
+                {recentAlerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className="flex items-center justify-between rounded-2xl bg-teal-50/70 p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-sm">
+                        <AlertTriangle size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {alert.type}
+                        </p>
+                        <p className="text-[11px] text-gray-600">
+                          {alert.location} • {alert.time}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                        alert.severity === 'high'
+                          ? 'bg-red-50 text-red-700'
+                          : alert.severity === 'medium'
+                          ? 'bg-orange-50 text-orange-700'
+                          : 'bg-yellow-50 text-yellow-700'
+                      }`}
+                    >
+                      {alert.severity.toUpperCase()}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Location card */}
+            <Card className="bg-white/90 rounded-3xl border-0 p-4 shadow-sm">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <MapPin className="text-teal-600" size={18} />
+                Last known location
+              </h3>
+              <p className="text-sm text-gray-800 mb-1">Living Room</p>
+              <p className="text-[11px] text-gray-500 mb-3">
+                Last fall detected at this location 2 hours ago.
+              </p>
+              <div className="rounded-2xl bg-teal-50 p-3">
+                <p className="text-[11px] text-gray-600">GPS</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  40.7128° N, 74.0060° W
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
