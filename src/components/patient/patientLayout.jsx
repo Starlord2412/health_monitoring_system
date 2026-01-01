@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Heart, Activity, AlertCircle, Calendar, Pill, TrendingUp, Home, BarChart3, Clock, Bell, Settings, LogOut, Menu, X, Edit2, Save, Plus, Trash2 } from 'lucide-react';
+import { Heart, Activity, AlertCircle, Calendar, Pill, TrendingUp, Home, BarChart3, Bell, MessageSquare, Edit2, Plus, Trash2, LogOut } from 'lucide-react';
 
 export default function HealthTrackDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMedicationModal, setShowMedicationModal] = useState(false);
@@ -10,10 +9,8 @@ export default function HealthTrackDashboard() {
   // Patient Data State
   const [patient, setPatient] = useState({
     name: 'John Doe',
-    age: 35,
-    gender: 'Male',
-    id: 'PT-2025-001',
-    lastUpdate: 'Today, January 12'
+    role: 'Caregiver view',
+    connection: 'Connected to patient'
   });
 
   const [vitals, setVitals] = useState({
@@ -34,19 +31,21 @@ export default function HealthTrackDashboard() {
 
   const [appointments, setAppointments] = useState([
     { id: 1, type: 'Doctor appointment', date: 'January 14', time: '2:00 PM', doctor: 'Dr. Smith' },
-    { id: 2, type: 'Lab work', date: 'January 20', time: '10:00 AM', doctor: 'Lab Center' },
-    { id: 3, type: 'Cardiology checkup', date: 'January 28', time: '3:30 PM', doctor: 'Dr. Johnson' }
-  ]);
-
-  const [activityLog, setActivityLog] = useState([
-    { id: 1, activity: 'Morning workout', date: 'Today', time: '7:00 AM', duration: '45 min', calories: 450 },
-    { id: 2, activity: 'Evening walk', date: 'Yesterday', time: '6:30 PM', duration: '30 min', calories: 200 },
-    { id: 3, activity: 'Gym session', date: 'Dec 28', time: '6:00 PM', duration: '60 min', calories: 600 }
+    { id: 2, type: 'Lab work', date: 'January 20', time: '10:00 AM', doctor: 'Lab Center' }
   ]);
 
   const healthScore = 85;
-  const stepGoal = 2000;
-  const stepsCompleted = 1500;
+  const alertsCount = 3;
+
+  // Vitals trend data
+  const vitalsTrend = [
+    { label: 'Mon', value: 118 },
+    { label: 'Tue', value: 122 },
+    { label: 'Wed', value: 120 },
+    { label: 'Thu', value: 119 },
+    { label: 'Fri', value: 121 },
+    { label: 'Sat', value: 120 }
+  ];
 
   // Handlers
   const handleSaveVitals = () => {
@@ -67,212 +66,263 @@ export default function HealthTrackDashboard() {
     setAppointments(appointments.filter(a => a.id !== id));
   };
 
-  const handleDeleteActivity = (id) => {
-    setActivityLog(activityLog.filter(a => a.id !== id));
-  };
+  // Header Component
+  const Header = () => (
+    <div className="bg-white border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+              HT
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">HealthTrack</h1>
+              <p className="text-sm text-gray-500">Family Portal</p>
+            </div>
+          </div>
 
-  const handleLogoutClick = () => {
-    alert('Logging out...');
-  };
+          <nav className="flex items-center gap-2">
+            {[
+              { icon: Home, label: 'Home', id: 'home' },
+              { icon: Bell, label: 'Alerts', id: 'alerts' },
+              { icon: Pill, label: 'Medication', id: 'medication' },
+              { icon: BarChart3, label: 'Reports', id: 'reports' },
+              { icon: MessageSquare, label: 'Consult', id: 'consult' }
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  activeTab === item.id 
+                    ? 'bg-teal-100 text-teal-700 font-medium' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <item.icon size={18} />
+                <span className="text-sm">{item.label}</span>
+              </button>
+            ))}
+          </nav>
 
-  // Sidebar Component
-  const Sidebar = () => (
-    <div className={`${sidebarOpen ? 'w-56' : 'w-20'} bg-gray-50 border-r border-gray-200 transition-all duration-300 flex flex-col h-screen`}>
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold">HT</div>
-          {sidebarOpen && <span className="font-bold text-lg">HealthTrack</span>}
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">{patient.role}</p>
+              <p className="text-xs text-gray-500">{patient.connection}</p>
+            </div>
+            <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-teal-600 transition-colors">
+              F
+            </div>
+            <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+              <LogOut size={18} />
+              <span className="text-sm">Logout</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      <nav className="flex-1 p-4 space-y-2">
-        {[
-          { icon: Home, label: 'Home', id: 'home' },
-          { icon: BarChart3, label: 'Reports', id: 'reports' },
-          { icon: TrendingUp, label: 'Predictions', id: 'predictions' },
-          { icon: Bell, label: 'Alerts', id: 'alerts' }
-        ].map(item => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              activeTab === item.id ? 'bg-teal-100 text-teal-700' : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <item.icon size={20} />
-            {sidebarOpen && <span>{item.label}</span>}
-          </button>
-        ))}
-      </nav>
-
-      <div className="p-4 space-y-2 border-t border-gray-200">
-        <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors`}>
-          <Settings size={20} />
-          {sidebarOpen && <span>Settings</span>}
-        </button>
-        <button onClick={handleLogoutClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors`}>
-          <LogOut size={20} />
-          {sidebarOpen && <span>Log out</span>}
-        </button>
       </div>
     </div>
   );
 
-  // Welcome Banner
-  const WelcomeBanner = () => (
-    <div className="bg-teal-500 text-gray-900 p-6 rounded-lg mb-6">
-      <div className="flex items-start gap-4">
-        <div className="text-4xl">👋</div>
-        <div>
-          <h2 className="text-2xl font-bold mb-2">Welcome to HealthTrack!</h2>
-          <p>Today is Monday, January 12. You have a workout scheduled, your next appointment is in 3 days, and you need to complete {stepGoal - stepsCompleted} more steps today. Keep going!</p>
+  // Hero Section
+  const HeroSection = () => (
+    <div className="bg-gradient-to-br from-teal-400 to-teal-500 text-white">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <p className="text-sm font-medium mb-2 opacity-90">FAMILY DASHBOARD</p>
+        <h2 className="text-4xl font-bold mb-3">Family health overview</h2>
+        <p className="text-lg opacity-90">Monitor vitals, activity, and alerts for your loved one in real time.</p>
+        
+        <div className="flex gap-4 mt-8">
+          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-6 flex-1">
+            <p className="text-sm opacity-90 mb-1">Health score</p>
+            <p className="text-5xl font-bold">{healthScore}</p>
+          </div>
+          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-6 flex-1">
+            <p className="text-sm opacity-90 mb-1">Alerts (24h)</p>
+            <p className="text-5xl font-bold text-orange-300">{alertsCount}</p>
+          </div>
         </div>
       </div>
     </div>
   );
 
   // Vitals Cards
-  const VitalsCards = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-between mb-4">
-          <Heart className="text-red-500" size={24} />
-          <span className="text-sm text-gray-500">Current Vitals</span>
-        </div>
-        <p className="text-3xl font-bold">{vitals.heartRate}</p>
-        <p className="text-gray-600">bpm</p>
-      </div>
+  const VitalsCards = () => {
+    const maxValue = Math.max(...vitalsTrend.map(v => v.value));
+    const minValue = Math.min(...vitalsTrend.map(v => v.value));
+    const range = maxValue - minValue;
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-between mb-4">
-          <Activity className="text-blue-500" size={24} />
-          <span className="text-sm text-gray-500">Health Status</span>
-        </div>
-        <p className="text-3xl font-bold text-green-600">Stable</p>
-        <p className="text-gray-600">All metrics normal</p>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-between mb-4">
-          <AlertCircle className="text-orange-500" size={24} />
-          <span className="text-sm text-gray-500">Alerts</span>
-        </div>
-        <p className="text-3xl font-bold">None</p>
-        <p className="text-gray-600">All clear</p>
-      </div>
-    </div>
-  );
-
-  // Vitals Dashboard
-  const VitalsDashboard = () => (
-    <div className="bg-white p-6 rounded-lg shadow mb-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold">Detailed Vitals</h3>
-        <button
-          onClick={() => setEditVitals({ ...vitals })}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <Edit2 size={16} /> Edit
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {[
-          { label: 'Heart Rate', value: vitals.heartRate, unit: 'bpm' },
-          { label: 'Blood Pressure', value: vitals.bloodPressure, unit: '' },
-          { label: 'Blood Sugar', value: vitals.bloodSugar, unit: 'mg/dL' },
-          { label: 'Temperature', value: vitals.temperature, unit: '°F' },
-          { label: 'Weight', value: vitals.weight, unit: 'lbs' },
-          { label: 'Oxygen Saturation', value: vitals.oxygenSaturation, unit: '%' }
-        ].map((item, idx) => (
-          <div key={idx} className="bg-teal-50 p-4 rounded-lg">
-            <p className="text-gray-600 text-sm mb-2">{item.label}</p>
-            <p className="text-2xl font-bold">{item.value} <span className="text-sm text-gray-600">{item.unit}</span></p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  // Medications Section
-  const MedicationsSection = () => (
-    <div className="bg-white p-6 rounded-lg shadow mb-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold flex items-center gap-2"><Pill size={20} /> Medication Reminder</h3>
-        <button
-          onClick={() => setShowMedicationModal(true)}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <Plus size={16} /> Add
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {medications.map(med => (
-          <div key={med.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-            <div>
-              <p className="font-bold">{med.name}</p>
-              <p className="text-sm text-gray-600">{med.dosage} - {med.frequency}</p>
-              <p className="text-sm text-teal-600 font-semibold">Next dose: {med.nextDose}</p>
+    return (
+      <div className="bg-teal-50">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Overall Health Score */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-500">Overall health score</p>
+                <TrendingUp className="text-teal-500" size={20} />
+              </div>
+              <p className="text-5xl font-bold text-teal-600 mb-2">{healthScore}</p>
+              <p className="text-sm text-gray-600">Good, stable condition</p>
             </div>
+
+            {/* Heart Rate */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-500">Heart rate</p>
+                <Heart className="text-red-500" size={20} />
+              </div>
+              <p className="text-5xl font-bold text-gray-900 mb-2">{vitals.heartRate}</p>
+              <p className="text-sm text-gray-600">Average today (bpm)</p>
+            </div>
+
+            {/* Blood Pressure */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-500">Blood pressure</p>
+                <Activity className="text-blue-500" size={20} />
+              </div>
+              <p className="text-5xl font-bold text-gray-900 mb-2">{vitals.bloodPressure}</p>
+              <p className="text-sm text-gray-600">Within normal range</p>
+            </div>
+
+            {/* Oxygen Level */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-500">Oxygen level</p>
+                <div className="text-teal-500">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12h4l3 9 4-18 3 9h4" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-5xl font-bold text-gray-900 mb-2">{vitals.oxygenSaturation}%</p>
+              <p className="text-sm text-gray-600">Stable oxygen saturation</p>
+            </div>
+          </div>
+
+          {/* Vitals Trend Chart */}
+          <div className="bg-white rounded-2xl p-8 shadow-sm mt-6">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <Activity className="text-teal-500" size={24} />
+                <h3 className="text-xl font-bold text-gray-900">Vitals trend</h3>
+              </div>
+              <button className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors">
+                Today
+              </button>
+            </div>
+
+            <div className="flex items-end justify-between gap-8 h-48">
+              {vitalsTrend.map((point, idx) => {
+                const heightPercent = ((point.value - minValue) / range) * 100;
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-3">
+                    <div className="w-full flex items-end justify-center" style={{ height: '160px' }}>
+                      <div 
+                        className="w-full bg-blue-500 rounded-t-lg relative group cursor-pointer hover:bg-blue-600 transition-colors"
+                        style={{ height: `${heightPercent}%`, minHeight: '40px' }}
+                      >
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                            {point.value}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-500 font-medium">{point.label}</span>
+                  </div>
+                );
+              })}
+              
+              <div className="flex-1 flex flex-col items-center gap-3">
+                <div className="w-full flex flex-col items-center justify-end gap-2" style={{ height: '160px' }}>
+                  <div className="text-orange-500">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C10.34 2 9 3.34 9 5c0 1.38.91 2.56 2.17 2.92l-.67 4.08H9v2h1.5l-.5 3H9v2h6v-2h-1l-.5-3H15v-2h-1.5l-.67-4.08C14.09 7.56 15 6.38 15 5c0-1.66-1.34-3-3-3z"/>
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-gray-900">{vitals.temperature}°F</p>
+                  </div>
+                </div>
+                <span className="text-sm text-gray-500 font-medium">Temperature</span>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500">Normal body temperature</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Medications and Appointments
+  const ContentSection = () => (
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Medications */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Pill size={20} className="text-teal-500" /> Medications
+            </h3>
             <button
-              onClick={() => handleDeleteMedication(med.id)}
-              className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
+              onClick={() => setShowMedicationModal(true)}
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
             >
-              <Trash2 size={18} />
+              <Plus size={16} /> Add
             </button>
           </div>
-        ))}
-      </div>
-    </div>
-  );
 
-  // Appointments Section
-  const AppointmentsSection = () => (
-    <div className="bg-white p-6 rounded-lg shadow mb-6">
-      <h3 className="text-xl font-bold flex items-center gap-2 mb-6"><Calendar size={20} /> Upcoming Appointments</h3>
+          <div className="space-y-3">
+            {medications.map(med => (
+              <div key={med.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-xl hover:bg-gray-100 transition-colors">
+                <div>
+                  <p className="font-semibold text-gray-900">{med.name}</p>
+                  <p className="text-sm text-gray-600">{med.dosage} • {med.frequency}</p>
+                  <p className="text-sm text-teal-600 font-medium mt-1">Next: {med.nextDose}</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteMedication(med.id)}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
 
-      <div className="space-y-4">
-        {appointments.map(apt => (
-          <div key={apt.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-            <div>
-              <p className="font-bold">{apt.type}</p>
-              <p className="text-sm text-gray-600">{apt.date} at {apt.time}</p>
-              <p className="text-sm text-gray-500">{apt.doctor}</p>
-            </div>
-            <button
-              onClick={() => handleDeleteAppointment(apt.id)}
-              className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
-            >
-              <Trash2 size={18} />
+        {/* Appointments */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Calendar size={20} className="text-teal-500" /> Appointments
+            </h3>
+            <button className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
+              <Plus size={16} /> Add
             </button>
           </div>
-        ))}
-      </div>
-    </div>
-  );
 
-  // Activity Log Section
-  const ActivityLogSection = () => (
-    <div className="bg-white p-6 rounded-lg shadow mb-6">
-      <h3 className="text-xl font-bold flex items-center gap-2 mb-6"><Activity size={20} /> Activity Log</h3>
-
-      <div className="space-y-4">
-        {activityLog.map(act => (
-          <div key={act.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-            <div>
-              <p className="font-bold">{act.activity}</p>
-              <p className="text-sm text-gray-600">{act.date} at {act.time}</p>
-              <p className="text-sm text-teal-600">{act.duration} • {act.calories} calories</p>
-            </div>
-            <button
-              onClick={() => handleDeleteActivity(act.id)}
-              className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
-            >
-              <Trash2 size={18} />
-            </button>
+          <div className="space-y-3">
+            {appointments.map(apt => (
+              <div key={apt.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-xl hover:bg-gray-100 transition-colors">
+                <div>
+                  <p className="font-semibold text-gray-900">{apt.type}</p>
+                  <p className="text-sm text-gray-600">{apt.date} at {apt.time}</p>
+                  <p className="text-sm text-gray-500 mt-1">{apt.doctor}</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteAppointment(apt.id)}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -280,7 +330,7 @@ export default function HealthTrackDashboard() {
   // Edit Vitals Modal
   const EditVitalsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full p-6">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6">
         <h2 className="text-2xl font-bold mb-6">Edit Vitals</h2>
         <div className="space-y-4">
           {[
@@ -292,12 +342,12 @@ export default function HealthTrackDashboard() {
             { key: 'oxygenSaturation', label: 'Oxygen Saturation (%)' }
           ].map(item => (
             <div key={item.key}>
-              <label className="block text-sm font-semibold mb-2">{item.label}</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{item.label}</label>
               <input
                 type="text"
                 value={editVitals[item.key]}
                 onChange={(e) => setEditVitals({ ...editVitals, [item.key]: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               />
             </div>
           ))}
@@ -305,15 +355,15 @@ export default function HealthTrackDashboard() {
         <div className="flex gap-3 mt-6">
           <button
             onClick={() => setShowEditModal(false)}
-            className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition-colors"
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg transition-colors font-medium"
           >
             Cancel
           </button>
           <button
             onClick={handleSaveVitals}
-            className="flex-1 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            className="flex-1 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
           >
-            <Save size={16} /> Save
+            Save
           </button>
         </div>
       </div>
@@ -326,44 +376,44 @@ export default function HealthTrackDashboard() {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6">
           <h2 className="text-2xl font-bold mb-6">Add Medication</h2>
           <div className="space-y-4">
             <input
               placeholder="Medication Name"
               value={newMed.name}
               onChange={(e) => setNewMed({ ...newMed, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
             <input
               placeholder="Dosage (e.g., 100mg)"
               value={newMed.dosage}
               onChange={(e) => setNewMed({ ...newMed, dosage: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
             <input
               placeholder="Frequency (e.g., Daily)"
               value={newMed.frequency}
               onChange={(e) => setNewMed({ ...newMed, frequency: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
             <input
-              placeholder="Next Dose"
+              placeholder="Next Dose (e.g., 2 hours)"
               value={newMed.nextDose}
               onChange={(e) => setNewMed({ ...newMed, nextDose: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
           <div className="flex gap-3 mt-6">
             <button
               onClick={() => setShowMedicationModal(false)}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition-colors"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg transition-colors font-medium"
             >
               Cancel
             </button>
             <button
               onClick={() => handleAddMedication(newMed)}
-              className="flex-1 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex-1 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
             >
               Add
             </button>
@@ -373,107 +423,53 @@ export default function HealthTrackDashboard() {
     );
   };
 
-  // Right Panel (Patient Overview)
-  const PatientOverview = () => (
-    <div className="w-80 bg-teal-50 border-l border-gray-200 p-6 flex flex-col h-screen sticky top-0">
-      <h2 className="text-xl font-bold mb-4">Patient Overview</h2>
-      <div className="bg-white p-4 rounded-lg mb-6">
-        <p className="text-sm text-gray-600 mb-1">{patient.gender}, {patient.age} years old</p>
-        <p className="text-sm text-gray-600">ID: {patient.id}</p>
-        <p className="text-sm text-gray-600">Last update: {patient.lastUpdate}</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-6">
-        <div className="bg-white p-3 rounded text-center">
-          <p className="text-xs text-gray-600">Heart</p>
-          <p className="font-bold">{vitals.heartRate} bpm</p>
-        </div>
-        <div className="bg-white p-3 rounded text-center">
-          <p className="text-xs text-gray-600">Blood Pressure</p>
-          <p className="font-bold">{vitals.bloodPressure}</p>
-        </div>
-        <div className="bg-white p-3 rounded text-center">
-          <p className="text-xs text-gray-600">Blood Sugar</p>
-          <p className="font-bold">{vitals.bloodSugar} mg/dL</p>
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <div className="flex justify-between mb-2">
-          {['27', '28', '29', '30', '31'].map((day, idx) => (
-            <button
-              key={day}
-              className={`w-10 h-10 rounded font-semibold transition-colors ${
-                day === '29' ? 'bg-teal-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-gray-600">Mon - Fri</p>
-      </div>
-
-      <div>
-        <h3 className="font-bold mb-3">Upcoming</h3>
-        <div className="space-y-3 flex-1">
-          {[
-            { icon: Activity, label: 'Morning workout' },
-            { icon: Calendar, label: 'Doctor appointment' },
-            { icon: Pill, label: 'Medication reminder' }
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded text-sm">
-              <item.icon size={18} className="text-teal-600" />
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <button className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg font-semibold mt-6 transition-colors">
-        Edit Profile
-      </button>
-    </div>
-  );
-
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
       
-      <div className="flex-1 flex flex-col overflow-auto">
-        <div className="flex items-center justify-between bg-white border-b border-gray-200 p-4 sticky top-0 z-10">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-teal-600 transition-colors">
-            ▲
+      {activeTab === 'home' && (
+        <>
+          <HeroSection />
+          <VitalsCards />
+          <ContentSection />
+        </>
+      )}
+      
+      {activeTab === 'alerts' && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h2 className="text-2xl font-bold mb-4">Alerts</h2>
+            <p className="text-gray-600">No critical alerts at this time. All metrics are stable.</p>
           </div>
         </div>
-
-        <div className="flex flex-1 overflow-auto">
-          <div className="flex-1 p-6 overflow-auto">
-            {activeTab === 'home' && (
-              <>
-                <WelcomeBanner />
-                <VitalsCards />
-                <VitalsDashboard />
-                <MedicationsSection />
-                <AppointmentsSection />
-                <ActivityLogSection />
-              </>
-            )}
-            {activeTab === 'reports' && <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-2xl font-bold mb-4">Reports</h2><p className="text-gray-600">Detailed health reports and analytics coming soon...</p></div>}
-            {activeTab === 'predictions' && <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-2xl font-bold mb-4">Predictions</h2><p className="text-gray-600">AI-powered health predictions coming soon...</p></div>}
-            {activeTab === 'alerts' && <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-2xl font-bold mb-4">Alerts</h2><p className="text-gray-600">No critical alerts at this time. All metrics are stable.</p></div>}
+      )}
+      
+      {activeTab === 'medication' && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h2 className="text-2xl font-bold mb-4">Medication Management</h2>
+            <p className="text-gray-600">Full medication schedule and history coming soon...</p>
           </div>
-
-          <PatientOverview />
         </div>
-      </div>
+      )}
+      
+      {activeTab === 'reports' && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h2 className="text-2xl font-bold mb-4">Reports</h2>
+            <p className="text-gray-600">Detailed health reports and analytics coming soon...</p>
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'consult' && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h2 className="text-2xl font-bold mb-4">Consult</h2>
+            <p className="text-gray-600">Connect with healthcare providers coming soon...</p>
+          </div>
+        </div>
+      )}
 
       {showEditModal && <EditVitalsModal />}
       {showMedicationModal && <AddMedicationModal />}
