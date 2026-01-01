@@ -55,70 +55,140 @@ const mockReports = [
 ];
 
 const getStatusBadge = (status: string) => {
-  const variants = {
+  const variants: Record<string, string> = {
     ready: "bg-green-100 text-green-800 border-green-200",
     processing: "bg-yellow-100 text-yellow-800 border-yellow-200",
     pending: "bg-blue-100 text-blue-800 border-blue-200",
   };
+
   return (
-    <Badge className={variants[status as keyof typeof variants] || ""}>
+    <Badge
+      className={`border px-2 py-0.5 text-[11px] font-medium ${
+        variants[status] || ""
+      }`}
+    >
       {status.toUpperCase()}
     </Badge>
   );
 };
 
-export function DoctorReports() {
+export default function DoctorReports() {
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Patient Reports</h1>
-        <p className="text-slate-600">Download and view patient health history</p>
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
+          Reports
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold text-teal-950">
+          Patient reports
+        </h1>
+        <p className="mt-1 text-sm text-teal-900/80">
+          Download and view patient health history, vitals trends, and
+          compliance summaries.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Card className="rounded-2xl border-0 bg-white/90 shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <FileText className="text-teal-600" size={16} />
+              Total reports
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-1">
+            <p className="text-xl font-semibold text-gray-900">
+              {mockReports.length}
+            </p>
+            <p className="mt-1 text-[11px] text-gray-500">
+              Generated for your patients
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-0 bg-white/90 shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <Download className="text-teal-600" size={16} />
+              Ready to download
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-1">
+            <p className="text-xl font-semibold text-gray-900">
+              {mockReports.filter((r) => r.status === "ready").length}
+            </p>
+            <p className="mt-1 text-[11px] text-gray-500">
+              Reports fully processed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-0 bg-white/90 shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <Eye className="text-teal-600" size={16} />
+              Processing
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-1">
+            <p className="text-xl font-semibold text-gray-900">
+              {mockReports.filter((r) => r.status === "processing").length}
+            </p>
+            <p className="mt-1 text-[11px] text-gray-500">
+              Reports still being generated
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {mockReports.map((report) => (
-          <Card key={report.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between mb-2">
-                <FileText className="w-8 h-8 text-blue-600" />
-                {getStatusBadge(report.status)}
+          <Card
+            key={report.id}
+            className="rounded-2xl border border-gray-100 bg-white/95 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-start justify-between p-4 pb-2">
+              <div>
+                <CardTitle className="text-sm font-semibold text-gray-900">
+                  {report.type}
+                </CardTitle>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  Patient{" "}
+                  <span className="font-medium text-gray-800">
+                    {report.patient}
+                  </span>
+                </p>
+                <p className="text-[11px] text-gray-500">
+                  Period {report.date}
+                </p>
               </div>
-              <CardTitle className="text-lg">{report.type}</CardTitle>
+              {getStatusBadge(report.status)}
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-slate-600">Patient</p>
-                  <p>{report.patient}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">Period</p>
-                  <p>{report.date}</p>
-                </div>
-                {report.status === "ready" && (
-                  <div>
-                    <p className="text-sm text-slate-600">Pages</p>
-                    <p>{report.pages} pages</p>
-                  </div>
-                )}
-                <div className="flex gap-2 pt-2">
-                  {report.status === "ready" ? (
-                    <>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="w-4 h-4 mr-2" />
-                        View
-                      </Button>
-                      <Button size="sm" className="flex-1">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full" disabled>
-                      Processing...
-                    </Button>
-                  )}
-                </div>
+            <CardContent className="flex items-center justify-between gap-3 p-4 pt-2">
+              <div className="text-[11px] text-gray-500">
+                <p>
+                  Pages:{" "}
+                  <span className="font-medium text-gray-800">
+                    {report.pages || "—"}
+                  </span>
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full border-gray-200 px-3 text-xs"
+                >
+                  <Eye className="mr-1 h-3 w-3" />
+                  View
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 rounded-full bg-teal-500 px-3 text-xs text-white hover:bg-teal-600"
+                >
+                  <Download className="mr-1 h-3 w-3" />
+                  Download
+                </Button>
               </div>
             </CardContent>
           </Card>

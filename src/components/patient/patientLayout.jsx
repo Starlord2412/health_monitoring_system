@@ -124,7 +124,7 @@ export default function HealthTrackDashboard() {
 
   // Hero Section
   const HeroSection = () => (
-    <div className="bg-gradient-to-br from-teal-400 to-teal-500 text-white">
+    <div className="bg-linear-to-br from-teal-400 to-teal-500 text-white">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <p className="text-sm font-medium mb-2 opacity-90">FAMILY DASHBOARD</p>
         <h2 className="text-4xl font-bold mb-3">Family health overview</h2>
