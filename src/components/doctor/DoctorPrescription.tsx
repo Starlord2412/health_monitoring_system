@@ -1,5 +1,3 @@
-// DoctorPrescription
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
@@ -13,13 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Plus, Edit, Pill } from "lucide-react";
 
 const mockPrescriptions = [
@@ -70,7 +62,7 @@ export function DoctorPrescription() {
     const prescription = {
       ...newPrescription,
       id: prescriptions.length + 1,
-      dateIssued: new Date().toISOString().split("T")[0],
+      dateIssued: new Date().toISOString().split('T')[0],
     };
     setPrescriptions([...prescriptions, prescription]);
     setNewPrescription({
@@ -84,189 +76,166 @@ export function DoctorPrescription() {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
-          Prescriptions
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-teal-950">
-          Medication management
-        </h1>
-        <p className="mt-1 text-sm text-teal-900/80">
-          Manage patient medications and schedules from a single place.
-        </p>
-      </div>
-
-      {/* Glass container */}
-      <div className="space-y-4 rounded-3xl bg-white/85 p-5 shadow-[0_18px_40px_rgba(15,118,110,0.18)] backdrop-blur">
-        {/* New prescription form */}
-        <Card className="border-0 bg-white/95 shadow-sm rounded-3xl">
-          <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <Pill className="text-teal-600" size={18} />
-              Create prescription
-            </CardTitle>
-            <span className="text-[11px] text-gray-500">
-              Quickly add a new prescription for any patient.
-            </span>
-          </CardHeader>
-          <CardContent className="space-y-4 p-4 pt-2">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div className="p-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl mb-2">Prescriptions</h1>
+          <p className="text-slate-600">Manage patient medications and schedules</p>
+        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              New Prescription
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add New Prescription</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="patient">Patient</Label>
+                  <Select
+                    value={newPrescription.patient}
+                    onValueChange={(value) =>
+                      setNewPrescription({ ...newPrescription, patient: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sarah Johnson">Sarah Johnson</SelectItem>
+                      <SelectItem value="Michael Chen">Michael Chen</SelectItem>
+                      <SelectItem value="Emily Davis">Emily Davis</SelectItem>
+                      <SelectItem value="Robert Wilson">Robert Wilson</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="medication">Medication Name</Label>
+                  <Input
+                    id="medication"
+                    value={newPrescription.medication}
+                    onChange={(e) =>
+                      setNewPrescription({ ...newPrescription, medication: e.target.value })
+                    }
+                    placeholder="e.g., Lisinopril"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="dosage">Dosage</Label>
+                  <Input
+                    id="dosage"
+                    value={newPrescription.dosage}
+                    onChange={(e) =>
+                      setNewPrescription({ ...newPrescription, dosage: e.target.value })
+                    }
+                    placeholder="e.g., 10mg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="frequency">Frequency</Label>
+                  <Select
+                    value={newPrescription.frequency}
+                    onValueChange={(value) =>
+                      setNewPrescription({ ...newPrescription, frequency: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Once daily">Once daily</SelectItem>
+                      <SelectItem value="Twice daily">Twice daily</SelectItem>
+                      <SelectItem value="Three times daily">Three times daily</SelectItem>
+                      <SelectItem value="As needed">As needed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="duration">Duration</Label>
+                  <Input
+                    id="duration"
+                    value={newPrescription.duration}
+                    onChange={(e) =>
+                      setNewPrescription({ ...newPrescription, duration: e.target.value })
+                    }
+                    placeholder="e.g., 30 days"
+                  />
+                </div>
+              </div>
               <div>
-                <Label className="text-xs text-gray-700">Patient</Label>
-                <Input
-                  className="mt-1 h-9 rounded-2xl border-gray-200 text-sm"
-                  placeholder="Patient name"
-                  value={newPrescription.patient}
+                <Label htmlFor="instructions">Instructions</Label>
+                <Textarea
+                  id="instructions"
+                  value={newPrescription.instructions}
                   onChange={(e) =>
-                    setNewPrescription({ ...newPrescription, patient: e.target.value })
+                    setNewPrescription({ ...newPrescription, instructions: e.target.value })
                   }
+                  placeholder="Special instructions for the patient..."
+                  rows={3}
                 />
               </div>
-              <div>
-                <Label className="text-xs text-gray-700">Medication</Label>
-                <Input
-                  className="mt-1 h-9 rounded-2xl border-gray-200 text-sm"
-                  placeholder="Medication name"
-                  value={newPrescription.medication}
-                  onChange={(e) =>
-                    setNewPrescription({
-                      ...newPrescription,
-                      medication: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div>
-                <Label className="text-xs text-gray-700">Dosage</Label>
-                <Input
-                  className="mt-1 h-9 rounded-2xl border-gray-200 text-sm"
-                  placeholder="e.g. 10mg"
-                  value={newPrescription.dosage}
-                  onChange={(e) =>
-                    setNewPrescription({ ...newPrescription, dosage: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-700">Frequency</Label>
-                <Select
-                  value={newPrescription.frequency}
-                  onValueChange={(value) =>
-                    setNewPrescription({ ...newPrescription, frequency: value })
-                  }
-                >
-                  <SelectTrigger className="mt-1 h-9 rounded-2xl border-gray-200 text-xs">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Once daily">Once daily</SelectItem>
-                    <SelectItem value="Twice daily">Twice daily</SelectItem>
-                    <SelectItem value="Three times daily">
-                      Three times daily
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs text-gray-700">Duration</Label>
-                <Input
-                  className="mt-1 h-9 rounded-2xl border-gray-200 text-sm"
-                  placeholder="e.g. 30 days"
-                  value={newPrescription.duration}
-                  onChange={(e) =>
-                    setNewPrescription({
-                      ...newPrescription,
-                      duration: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs text-gray-700">Instructions</Label>
-              <Textarea
-                className="mt-1 min-h-20 rounded-2xl border-gray-200 text-sm"
-                placeholder="Instructions for patient..."
-                value={newPrescription.instructions}
-                onChange={(e) =>
-                  setNewPrescription({
-                    ...newPrescription,
-                    instructions: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-end">
-              <Button
-                size="sm"
-                className="flex items-center gap-2 rounded-full bg-teal-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-teal-600"
-                onClick={handleAddPrescription}
-              >
-                <Plus size={14} />
-                Add prescription
+              <Button className="w-full" onClick={handleAddPrescription}>
+                Add Prescription
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        {/* Existing prescriptions */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {prescriptions.map((prescription) => (
-            <Card
-              key={prescription.id}
-              className="border border-gray-100 bg-white/95 shadow-sm rounded-2xl"
-            >
-              <CardHeader className="flex flex-row items-start justify-between p-4 pb-2">
-                <div>
-                  <CardTitle className="text-sm font-semibold text-gray-900">
-                    {prescription.patient}
-                  </CardTitle>
-                  <p className="mt-1 text-[11px] text-gray-500">
-                    Date issued: {prescription.dateIssued}
-                  </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {prescriptions.map((prescription) => (
+          <Card key={prescription.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Pill className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{prescription.medication}</CardTitle>
+                    <p className="text-sm text-slate-600">{prescription.patient}</p>
+                  </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full border-gray-200 text-gray-600"
-                >
-                  <Edit size={14} />
+                <Button variant="ghost" size="sm">
+                  <Edit className="w-4 h-4" />
                 </Button>
-              </CardHeader>
-              <CardContent className="space-y-2 p-4 pt-2 text-xs text-gray-700">
-                <div className="grid grid-cols-2 gap-2">
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-[11px] text-gray-500">Medication</p>
-                    <p className="font-medium">{prescription.medication}</p>
+                    <p className="text-sm text-slate-600">Dosage</p>
+                    <p>{prescription.dosage}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-gray-500">Dosage</p>
-                    <p className="font-medium">{prescription.dosage}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-gray-500">Frequency</p>
-                    <p className="font-medium">{prescription.frequency}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-gray-500">Duration</p>
-                    <p className="font-medium">{prescription.duration}</p>
+                    <p className="text-sm text-slate-600">Frequency</p>
+                    <p>{prescription.frequency}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] text-gray-500">Instructions</p>
-                  <p>{prescription.instructions}</p>
+                  <p className="text-sm text-slate-600">Duration</p>
+                  <p>{prescription.duration}</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <div>
+                  <p className="text-sm text-slate-600">Instructions</p>
+                  <p className="text-sm">{prescription.instructions}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Date Issued</p>
+                  <p className="text-sm">{prescription.dateIssued}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
