@@ -19,63 +19,65 @@ import AdminDashboard from "./components/admin/adminLayout";
 import AboutPage from "./components/AboutPage";
 import HealthTrackDashboard from "./components/patient/patientLayout";
 import FAQPage from "./components/FAQPage";
+import "./index.css";
+
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
 
-        {/* Redirect root */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/about" element={<AboutPage />} /> 
-        <Route path="/faq" element={<FAQPage />} />
+    <Routes>
+
+      {/* Redirect root */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/faq" element={<FAQPage />} />
 
 
-        {/* Doctor Routes */}
-        <Route path="/doctor" element={<DoctorLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<DoctorDashboard />} />
-          <Route path="patients" element={<PatientsList />} />
-          <Route path="alerts" element={<DoctorAlerts />} />
-          <Route path="reports" element={<DoctorReports />} />
-          <Route path="prescription" element={<DoctorPrescription />} />
-          <Route path="consult" element={<DoctorConsult />} />
-        </Route>
+      {/* Doctor Routes */}
+      <Route path="/doctor" element={<DoctorLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<DoctorDashboard />} />
+        <Route path="patients" element={<PatientsList />} />
+        <Route path="alerts" element={<DoctorAlerts />} />
+        <Route path="reports" element={<DoctorReports />} />
+        <Route path="prescription" element={<DoctorPrescription />} />
+        <Route path="consult" element={<DoctorConsult />} />
+      </Route>
 
-        
 
-        {/* Family Routes */}
-        <Route path="/family" element={<FamilyLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<FamilyDashboard />} />
-          <Route path="alerts" element={<AlertsPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="medication" element={<MedicationPage />} />
-          <Route path="contact-doctor" element={<ContactDoctorPage />} />
-        </Route>
 
-{/* patient routes */}
+      {/* Family Routes */}
+      <Route path="/family" element={<FamilyLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<FamilyDashboard />} />
+        <Route path="alerts" element={<AlertsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="medication" element={<MedicationPage />} />
+        <Route path="contact-doctor" element={<ContactDoctorPage />} />
+      </Route>
 
-<Route path="/patient" element={<HealthTrackDashboard />}>
-<Route index element={<Navigate to="dashboard" replace />} />
-          {/* <Route path="dashboard" element={} />
+      {/* patient routes */}
+
+      <Route path="/patient" element={<HealthTrackDashboard />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        {/* <Route path="dashboard" element={} />
           <Route path="alerts" element={} />
           <Route path="reports" element={} />
           <Route path="medication" element={<} />
           <Route path="contact-doctor" element={<} /> */}
 
 
-</Route>
+      </Route>
 
 
-<Route path="/admin" element={<AdminDashboard/>}></Route>
-        
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <Route path="/admin" element={<AdminDashboard />}></Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="" replace />} />
+    </Routes>
+
   );
 }
 
