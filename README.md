@@ -490,11 +490,7 @@ export default function LoginPage() {
             patient: '/patient',
             doctor: '/doctor',
             admin: '/admin',
-<<<<<<< HEAD
-            family:'/family'
-=======
             family : '/family'
->>>>>>> b4a88bab70c21c03cc096493c8785bc2765dca99
           };
           
           const redirectPath = redirectMap[result.user.role] || '/';
@@ -507,10 +503,7 @@ export default function LoginPage() {
             submit: result.error || 'Login failed',
           });
         }
-<<<<<<< HEAD
-=======
         
->>>>>>> b4a88bab70c21c03cc096493c8785bc2765dca99
       } catch (error) {
         console.error('Login error:', error);
         setErrors({
