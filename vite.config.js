@@ -6,5 +6,6 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(),tailwindcss()],
-   base: '/health_monitoring_system/',
+  base: "/sample_project/"
+
 })
