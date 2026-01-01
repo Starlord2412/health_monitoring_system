@@ -1,5 +1,16 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Activity, Users, Bell, FileText, Pill, MessageSquare, LogOut, Home, Menu, X } from "lucide-react";
+import {
+  Activity,
+  Users,
+  Bell,
+  FileText,
+  Pill,
+  MessageSquare,
+  LogOut,
+  Home,
+  Menu,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -16,96 +27,107 @@ function DoctorNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold">
-              HT
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">HealthTrack</h1>
-              <p className="text-xs text-gray-600">Doctor Portal</p>
-            </div>
+    <header className="w-full border-b border-gray-200 bg-white">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+        {/* Left: logo */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-sm font-bold text-white">
+            HT
           </div>
+          <div className="leading-tight">
+            <p className="text-sm font-semibold text-gray-900">HealthTrack</p>
+            <p className="text-xs text-gray-500">Doctor Portal</p>
+          </div>
+        </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => (
+        {/* Center: nav items (desktop) */}
+        <nav className="hidden items-center gap-1 md:flex">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  `flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     isActive
-                      ? "bg-teal-100 text-teal-700"
+                      ? "bg-teal-100 text-teal-800"
                       : "text-gray-700 hover:bg-gray-100"
                   }`
                 }
               >
-                <item.icon size={18} />
-                <span className="text-sm font-medium">{item.label}</span>
+                <Icon size={16} />
+                <span>{item.label}</span>
               </NavLink>
-            ))}
-          </div>
+            );
+          })}
+        </nav>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-4">
-            {/* Desktop Logout */}
-            <button className="hidden lg:flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-              <LogOut size={18} />
-              <span className="text-sm font-medium">Logout</span>
-            </button>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+        {/* Right: profile + logout (desktop) */}
+        <div className="hidden items-center gap-3 md:flex">
+          <div className="text-right">
+            <p className="text-xs font-semibold text-gray-800">Dr. Smith</p>
+            <p className="text-[11px] text-gray-500">Cardiologist</p>
           </div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
+            DS
+          </div>
+          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-gray-700 hover:bg-gray-100">
+            <LogOut size={14} />
+            Logout
+          </button>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
-            <div className="flex flex-col gap-2">
-              {navItems.map((item) => (
+        {/* Mobile menu button */}
+        <button
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-700 md:hidden"
+          onClick={() => setMobileMenuOpen((v) => !v)}
+        >
+          {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+      </div>
+
+      {/* Mobile nav */}
+      {mobileMenuOpen && (
+        <div className="border-t border-gray-200 bg-white md:hidden">
+          <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-3 py-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    `flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                       isActive
-                        ? "bg-teal-100 text-teal-700"
+                        ? "bg-teal-100 text-teal-800"
                         : "text-gray-700 hover:bg-gray-100"
                     }`
                   }
                 >
-                  <item.icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon size={16} />
+                  <span>{item.label}</span>
                 </NavLink>
-              ))}
-              <button className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors w-full">
-                <LogOut size={20} />
-                <span className="font-medium">Logout</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+              );
+            })}
+
+            <button className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">
+              <LogOut size={14} />
+              Logout
+            </button>
+          </nav>
+        </div>
+      )}
+    </header>
   );
 }
 
 export function DoctorLayout() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#C9E6E2]">
       <DoctorNavbar />
-      <main className="overflow-auto">
+      <main className="mx-auto max-w-6xl px-4 py-6">
         <Outlet />
       </main>
     </div>
