@@ -214,61 +214,54 @@ export function PatientsList() {
                             Profile
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-xl">
-                          <DialogHeader>
-                            <DialogTitle className="text-lg">
-                              Patient profile
-                            </DialogTitle>
-                            <p className="text-xs text-slate-500">
-                              Basic demographics and current monitoring status.
-                            </p>
-                          </DialogHeader>
+                       <DialogContent className="max-w-xl rounded-3xl bg-white shadow-xl">
+  <DialogHeader>
+    <DialogTitle className="text-lg font-semibold text-slate-900">
+      Patient profile
+    </DialogTitle>
+    <p className="text-xs text-slate-500">
+      Basic demographics and current monitoring status.
+    </p>
+  </DialogHeader>
 
-                          <div className="mt-3 grid grid-cols-2 gap-4 rounded-lg bg-slate-50 p-4 text-sm">
-                            <div>
-                              <p className="text-xs text-slate-500">Name</p>
-                              <p className="mt-0.5 font-medium">
-                                {patient.name}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-500">Age</p>
-                              <p className="mt-0.5">
-                                {patient.age} years
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-500">
-                                Primary condition
-                              </p>
-                              <p className="mt-0.5">
-                                {patient.condition}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-500">
-                                Last visit
-                              </p>
-                              <p className="mt-0.5">
-                                {patient.lastVisit}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-500">
-                                Status
-                              </p>
-                              <div className="mt-1 inline-flex items-center gap-2">
-                                <Badge
-                                  className={`capitalize text-[11px] ${getStatusColor(
-                                    patient.status
-                                  )}`}
-                                >
-                                  {patient.status}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </DialogContent>
+  <div className="mt-4 grid grid-cols-2 gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+    <div>
+      <p className="text-[11px] font-medium text-slate-500">Name</p>
+      <p className="mt-0.5 font-semibold text-slate-900">
+        {patient.name}
+      </p>
+    </div>
+    <div>
+      <p className="text-[11px] font-medium text-slate-500">Age</p>
+      <p className="mt-0.5 text-slate-800">{patient.age} years</p>
+    </div>
+    <div>
+      <p className="text-[11px] font-medium text-slate-500">
+        Primary condition
+      </p>
+      <p className="mt-0.5 text-slate-800">{patient.condition}</p>
+    </div>
+    <div>
+      <p className="text-[11px] font-medium text-slate-500">
+        Last visit
+      </p>
+      <p className="mt-0.5 text-slate-800">{patient.lastVisit}</p>
+    </div>
+    <div>
+      <p className="text-[11px] font-medium text-slate-500">Status</p>
+      <div className="mt-1 inline-flex items-center gap-2">
+        <Badge
+          className={`rounded-full px-2 py-0.5 text-[10px] capitalize ${getStatusColor(
+            patient.status
+          )}`}
+        >
+          {patient.status}
+        </Badge>
+      </div>
+    </div>
+  </div>
+</DialogContent>
+
                       </Dialog>
 
                       {/* Timeline Dialog */}
@@ -287,45 +280,45 @@ export function PatientsList() {
                             Timeline
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle className="text-lg">
-                              Health timeline
-                            </DialogTitle>
-                            <p className="text-xs text-slate-500">
-                              Sequential record of recent readings and
-                              interventions for {patient.name}.
-                            </p>
-                          </DialogHeader>
+                        <DialogContent className="max-w-3xl rounded-3xl bg-white shadow-xl">
+  <DialogHeader>
+    <DialogTitle className="text-lg font-semibold text-slate-900">
+      Health timeline
+    </DialogTitle>
+    <p className="text-xs text-slate-500">
+      Sequential record of recent readings and interventions for {patient.name}.
+    </p>
+  </DialogHeader>
 
-                          <div className="mt-3 max-h-80 space-y-4 overflow-y-auto rounded-lg bg-slate-50 p-4">
-                            {patient.timeline.map((item, idx) => (
-                              <div
-                                key={idx}
-                                className="relative border-l-2 border-blue-500 pl-4"
-                              >
-                                <span className="absolute -left-1.75 top-1 h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow" />
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <p className="text-[11px] font-medium text-slate-500">
-                                      {item.date}
-                                    </p>
-                                    <p className="mt-1 text-sm font-medium text-slate-800">
-                                      {item.event}
-                                    </p>
-                                    <p
-                                      className={`mt-0.5 text-sm font-medium ${getEventStatusColor(
-                                        item.status
-                                      )}`}
-                                    >
-                                      {item.value}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </DialogContent>
+  <div className="mt-4 max-h-80 space-y-4 overflow-y-auto rounded-2xl border border-emerald-100 bg-slate-50 p-4">
+    {patient.timeline.map((item, idx) => (
+      <div
+        key={idx}
+        className="relative border-l-2 border-emerald-500 pl-4"
+      >
+        <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow" />
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-medium text-slate-500">
+              {item.date}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">
+              {item.event}
+            </p>
+            <p
+              className={`mt-0.5 text-sm font-medium ${getEventStatusColor(
+                item.status
+              )}`}
+            >
+              {item.value}
+            </p>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</DialogContent>
+
                       </Dialog>
                     </div>
                   </CardContent>
