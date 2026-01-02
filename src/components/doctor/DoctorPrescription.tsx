@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -27,15 +27,16 @@ import { app } from "../../lib/firebase";
 
 type Prescription = {
   id: number;
-  firebaseKey?: string; // <-- key in RTDB
+  firebaseKey?: string; // key in RTDB
   patient: string;
   patientId?: string;
   medication: string;
   dosage: string;
   frequency: string;
-  duration: string;
+  duration: string; // e.g. "30 days"
   instructions: string;
-  dateIssued: string;
+  dateIssued: string; // "YYYY-MM-DD"
+  expiresAt?: number; // timestamp in ms
 };
 
 export function DoctorPrescription() {
@@ -57,7 +58,26 @@ export function DoctorPrescription() {
     Prescription | null
   >(null);
 
-  // Read prescriptions from Realtime DB
+  // ---- helpers for duration / expiry ----
+
+  const parseDurationDays = (duration: string): number => {
+    const match = duration.match(/(\d+)/);
+    return match ? Number(match[1]) : 0;
+  };
+
+  const computeExpiresAt = (dateIssued: string, duration: string): number | null => {
+    const days = parseDurationDays(duration);
+    if (!days) return null;
+
+    const start = new Date(dateIssued);
+    if (isNaN(start.getTime())) return null;
+
+    const expires = new Date(start);
+    expires.setDate(expires.getDate() + days);
+    return expires.getTime();
+  };
+
+  // ---- Read prescriptions from Realtime DB ----
   useEffect(() => {
     const db = getDatabase(app);
     const prescriptionsRef = ref(db, "prescriptions");
@@ -70,7 +90,6 @@ export function DoctorPrescription() {
         return;
       }
 
-      // include firebase key on each item
       const list: Prescription[] = Object.entries(data).map(
         ([key, value]: [string, any]) => ({
           ...(value as Prescription),
@@ -97,7 +116,7 @@ export function DoctorPrescription() {
     setEditingPrescription(null);
   };
 
-  // Add or update prescription
+  // ---- Add or update prescription ----
   const handleSavePrescription = async () => {
     if (
       !newPrescription.patient ||
@@ -109,6 +128,7 @@ export function DoctorPrescription() {
 
     const db = getDatabase(app);
     const prescriptionsRef = ref(db, "prescriptions");
+    const todayStr = new Date().toISOString().split("T")[0];
 
     if (isEditing && editingPrescription?.firebaseKey) {
       // UPDATE existing
@@ -117,10 +137,18 @@ export function DoctorPrescription() {
         `prescriptions/${editingPrescription.firebaseKey}`
       );
 
+      const dateIssued = editingPrescription.dateIssued || todayStr;
+      const durationToUse =
+        newPrescription.duration || editingPrescription.duration;
+      const expiresAt =
+        computeExpiresAt(dateIssued, durationToUse) ??
+        editingPrescription.expiresAt;
+
       const updated: Prescription = {
         ...editingPrescription,
         ...newPrescription,
-        // keep same id and dateIssued when editing
+        dateIssued,
+        expiresAt,
       };
 
       await update(itemRef, updated);
@@ -128,10 +156,15 @@ export function DoctorPrescription() {
       // CREATE new
       const newRef = push(prescriptionsRef);
 
+      const dateIssued = todayStr;
+      const expiresAt =
+        computeExpiresAt(dateIssued, newPrescription.duration) ?? undefined;
+
       const prescription: Prescription = {
         ...newPrescription,
         id: Date.now(),
-        dateIssued: new Date().toISOString().split("T")[0],
+        dateIssued,
+        expiresAt,
       };
 
       await set(newRef, prescription);
@@ -162,6 +195,28 @@ export function DoctorPrescription() {
     setDialogOpen(true);
   };
 
+  // ---- Derived lists: active vs history ----
+  const now = Date.now();
+
+  const activePrescriptions = useMemo(
+    () =>
+      prescriptions.filter((p) => {
+        if (!p.expiresAt) return true;
+        return p.expiresAt > now;
+      }),
+    [prescriptions, now]
+  );
+
+  const historyPrescriptions = useMemo(
+    () =>
+      [...prescriptions].sort((a, b) => {
+        const aDate = new Date(a.dateIssued).getTime();
+        const bDate = new Date(b.dateIssued).getTime();
+        return bDate - aDate; // newest first
+      }),
+    [prescriptions]
+  );
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Page header */}
@@ -175,10 +230,13 @@ export function DoctorPrescription() {
               Manage patient medications, schedules, and instructions.
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
               <Button
                 className="bg-teal-500 hover:bg-teal-600"
@@ -374,7 +432,7 @@ export function DoctorPrescription() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Active prescriptions */}
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-3">
@@ -388,13 +446,13 @@ export function DoctorPrescription() {
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {loading ? "Loading..." : `${prescriptions.length} records`}
+                {loading ? "Loading..." : `${activePrescriptions.length} records`}
               </span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {prescriptions.map((prescription) => (
+              {activePrescriptions.map((prescription) => (
                 <Card
                   key={prescription.firebaseKey ?? prescription.id}
                   className="border-slate-200 bg-white/80 shadow-none transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
@@ -462,6 +520,72 @@ export function DoctorPrescription() {
                   </CardContent>
                 </Card>
               ))}
+              {!loading && activePrescriptions.length === 0 && (
+                <p className="text-xs text-slate-500">
+                  No active prescriptions.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* History section */}
+      <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6 lg:px-8">
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-lg">
+                  Prescription history
+                </CardTitle>
+                <p className="mt-1 text-xs text-slate-500">
+                  View all prescriptions, including expired ones.
+                </p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
+                {loading ? "Loading..." : `${historyPrescriptions.length} total`}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-xs">
+              {historyPrescriptions.map((p) => {
+                const isExpired =
+                  typeof p.expiresAt === "number" && p.expiresAt <= now;
+                return (
+                  <div
+                    key={p.firebaseKey ?? p.id}
+                    className="flex items-start justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+                  >
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {p.medication} — {p.patient}
+                      </p>
+                      <p className="text-slate-500">
+                        {p.dosage} • {p.frequency} • {p.duration}
+                      </p>
+                      <p className="text-slate-400">
+                        Issued: {p.dateIssued}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p
+                        className={`text-xs ${
+                          isExpired ? "text-red-500" : "text-emerald-600"
+                        }`}
+                      >
+                        {isExpired ? "Expired" : "Active"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+              {!loading && historyPrescriptions.length === 0 && (
+                <p className="text-xs text-slate-500">
+                  No prescriptions in history.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
