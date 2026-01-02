@@ -108,171 +108,180 @@ export function DoctorPrescription() {
                 <Plus className="mr-2 h-4 w-4" />
                 New prescription
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-lg">
-                  Add new prescription
-                </DialogTitle>
-              </DialogHeader>
-              <div className="mt-3 space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="patient" className="text-xs font-medium">
-                      Patient
-                    </Label>
-                    <Select
-                      value={newPrescription.patient}
-                      onValueChange={(value) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          patient: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="mt-1 h-9 text-sm">
-                        <SelectValue placeholder="Select patient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Sarah Johnson">
-                          Sarah Johnson
-                        </SelectItem>
-                        <SelectItem value="Michael Chen">
-                          Michael Chen
-                        </SelectItem>
-                        <SelectItem value="Emily Davis">
-                          Emily Davis
-                        </SelectItem>
-                        <SelectItem value="Robert Wilson">
-                          Robert Wilson
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="medication"
-                      className="text-xs font-medium"
-                    >
-                      Medication name
-                    </Label>
-                    <Input
-                      id="medication"
-                      value={newPrescription.medication}
-                      onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          medication: e.target.value,
-                        })
-                      }
-                      placeholder="e.g., Lisinopril"
-                      className="mt-1 h-9 text-sm"
-                    />
-                  </div>
-                </div>
+            </DialogTrigger>  
+            
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div>
-                    <Label htmlFor="dosage" className="text-xs font-medium">
-                      Dosage
-                    </Label>
-                    <Input
-                      id="dosage"
-                      value={newPrescription.dosage}
-                      onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          dosage: e.target.value,
-                        })
-                      }
-                      placeholder="e.g., 10mg"
-                      className="mt-1 h-9 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="frequency"
-                      className="text-xs font-medium"
-                    >
-                      Frequency
-                    </Label>
-                    <Select
-                      value={newPrescription.frequency}
-                      onValueChange={(value) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          frequency: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="mt-1 h-9 text-sm">
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Once daily">
-                          Once daily
-                        </SelectItem>
-                        <SelectItem value="Twice daily">
-                          Twice daily
-                        </SelectItem>
-                        <SelectItem value="Three times daily">
-                          Three times daily
-                        </SelectItem>
-                        <SelectItem value="As needed">
-                          As needed
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="duration" className="text-xs font-medium">
-                      Duration
-                    </Label>
-                    <Input
-                      id="duration"
-                      value={newPrescription.duration}
-                      onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
-                          duration: e.target.value,
-                        })
-                      }
-                      placeholder="e.g., 30 days"
-                      className="mt-1 h-9 text-sm"
-                    />
-                  </div>
-                </div>
+<DialogContent
+  className="max-w-2xl rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl"
+>
+  <DialogHeader className="border-b border-slate-200 pb-3">
+    <DialogTitle className="text-lg font-semibold text-teal-600">
+      Add new prescription
+    </DialogTitle>
+  </DialogHeader>
 
-                <div>
-                  <Label
-                    htmlFor="instructions"
-                    className="text-xs font-medium"
-                  >
-                    Instructions
-                  </Label>
-                  <Textarea
-                    id="instructions"
-                    value={newPrescription.instructions}
-                    onChange={(e) =>
-                      setNewPrescription({
-                        ...newPrescription,
-                        instructions: e.target.value,
-                      })
-                    }
-                    placeholder="Special instructions for the patient..."
-                    rows={3}
-                    className="mt-1 text-sm"
-                  />
-                </div>
+  <div className="mt-4 space-y-4">
+    {/* Row 1 */}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <Label
+          htmlFor="patient"
+          className="text-xs font-medium text-slate-700"
+        >
+          Patient
+        </Label>
+        <Select
+          value={newPrescription.patient}
+          onValueChange={(value) =>
+            setNewPrescription({
+              ...newPrescription,
+              patient: value,
+            })
+          }
+        >
+          <SelectTrigger className="mt-1 h-9 text-sm bg-white border border-slate-300 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80">
+            <SelectValue placeholder="Select patient" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-slate-200 text-slate-900">
+            <SelectItem value="Sarah Johnson">Sarah Johnson</SelectItem>
+            <SelectItem value="Michael Chen">Michael Chen</SelectItem>
+            <SelectItem value="Emily Davis">Emily Davis</SelectItem>
+            <SelectItem value="Robert Wilson">Robert Wilson</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-                <Button
-                  className="mt-2 w-full bg-teal-500 hover:bg-teal-600"
-                  onClick={handleAddPrescription}
-                >
-                  Add prescription
-                </Button>
-              </div>
-            </DialogContent>
+      <div>
+        <Label
+          htmlFor="medication"
+          className="text-xs font-medium text-slate-700"
+        >
+          Medication name
+        </Label>
+        <Input
+          id="medication"
+          value={newPrescription.medication}
+          onChange={(e) =>
+            setNewPrescription({
+              ...newPrescription,
+              medication: e.target.value,
+            })
+          }
+          placeholder="e.g., Lisinopril"
+          className="mt-1 h-9 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
+        />
+      </div>
+    </div>
+
+    {/* Row 2 */}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div>
+        <Label
+          htmlFor="dosage"
+          className="text-xs font-medium text-slate-700"
+        >
+          Dosage
+        </Label>
+        <Input
+          id="dosage"
+          value={newPrescription.dosage}
+          onChange={(e) =>
+            setNewPrescription({
+              ...newPrescription,
+              dosage: e.target.value,
+            })
+          }
+          placeholder="e.g., 10mg"
+          className="mt-1 h-9 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
+        />
+      </div>
+
+      <div>
+        <Label
+          htmlFor="frequency"
+          className="text-xs font-medium text-slate-700"
+        >
+          Frequency
+        </Label>
+        <Select
+          value={newPrescription.frequency}
+          onValueChange={(value) =>
+            setNewPrescription({
+              ...newPrescription,
+              frequency: value,
+            })
+          }
+        >
+          <SelectTrigger className="mt-1 h-9 text-sm bg-white border border-slate-300 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80">
+            <SelectValue placeholder="Select frequency" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-slate-200 text-slate-900">
+            <SelectItem value="Once daily">Once daily</SelectItem>
+            <SelectItem value="Twice daily">Twice daily</SelectItem>
+            <SelectItem value="Three times daily">Three times daily</SelectItem>
+            <SelectItem value="As needed">As needed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label
+          htmlFor="duration"
+          className="text-xs font-medium text-slate-700"
+        >
+          Duration
+        </Label>
+        <Input
+          id="duration"
+          value={newPrescription.duration}
+          onChange={(e) =>
+            setNewPrescription({
+              ...newPrescription,
+              duration: e.target.value,
+            })
+          }
+          placeholder="e.g., 30 days"
+          className="mt-1 h-9 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
+        />
+      </div>
+    </div>
+
+    {/* Instructions */}
+    <div>
+      <Label
+        htmlFor="instructions"
+        className="text-xs font-medium text-slate-700"
+      >
+        Instructions
+      </Label>
+      <Textarea
+        id="instructions"
+        value={newPrescription.instructions}
+        onChange={(e) =>
+          setNewPrescription({
+            ...newPrescription,
+            instructions: e.target.value,
+          })
+        }
+        placeholder="Special instructions for the patient..."
+        rows={3}
+        className="mt-1 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
+      />
+    </div>
+
+    {/* Button */}
+    <Button
+      className="mt-2 w-full bg-teal-500 hover:bg-teal-600 text-white font-medium shadow-md shadow-teal-500/40"
+      onClick={handleAddPrescription}
+    >
+      Add prescription
+    </Button>
+  </div>
+</DialogContent>
+
+
+
+
           </Dialog>
         </div>
       </div>
