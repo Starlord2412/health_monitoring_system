@@ -1,0 +1,236 @@
+{
+  "doctors": [
+    {
+      "id": 1,
+      "name": "Dr. Smith",
+      "specialty": "Cardiology",
+      "email": "smith@hospital.com",
+      "phone": "555-0101",
+      "patients": 24
+    },
+    {
+      "id": 2,
+      "name": "Dr. Johnson",
+      "specialty": "Neurology",
+      "email": "johnson@hospital.com",
+      "phone": "555-0102",
+      "patients": 18
+    },
+    {
+      "id": 3,
+      "name": "Dr. Williams",
+      "specialty": "Orthopedics",
+      "email": "williams@hospital.com",
+      "phone": "555-0103",
+      "patients": 31
+    },
+    {
+      "id": 4,
+      "name": "Dr. Brown",
+      "specialty": "Pediatrics",
+      "email": "brown@hospital.com",
+      "phone": "555-0104",
+      "patients": 22
+    }
+  ],
+  "patients": [
+    {
+      "id": "PT-001",
+      "name": "John Doe",
+      "age": 35,
+      "gender": "Male",
+      "email": "john@email.com",
+      "assignedDoctor": "Dr. Smith",
+      "lastCheckup": "2025-01-10",
+      "healthScore": 85
+    },
+    {
+      "id": "PT-002",
+      "name": "Jane Smith",
+      "age": 42,
+      "gender": "Female",
+      "email": "jane@email.com",
+      "assignedDoctor": "Dr. Johnson",
+      "lastCheckup": "2025-01-08",
+      "healthScore": 92
+    },
+    {
+      "id": "PT-003",
+      "name": "Robert Wilson",
+      "age": 58,
+      "gender": "Male",
+      "email": "robert@email.com",
+      "assignedDoctor": "Dr. Smith",
+      "lastCheckup": "2025-01-12",
+      "healthScore": 78
+    },
+    {
+      "id": "PT-004",
+      "name": "Emily Davis",
+      "age": 29,
+      "gender": "Female",
+      "email": "emily@email.com",
+      "assignedDoctor": "Dr. Williams",
+      "lastCheckup": "2025-01-11",
+      "healthScore": 88
+    },
+    {
+      "id": "PT-005",
+      "name": "Michael Brown",
+      "age": 51,
+      "gender": "Male",
+      "email": "michael@email.com",
+      "assignedDoctor": "Dr. Brown",
+      "lastCheckup": "2025-01-09",
+      "healthScore": 82
+    },
+    {
+      "id": "PT-006",
+      "name": "Sarah Johnson",
+      "age": 37,
+      "gender": "Female",
+      "email": "sarah@email.com",
+      "assignedDoctor": "Dr. Smith",
+      "lastCheckup": "2025-01-07",
+      "healthScore": 90
+    }
+  ],
+  "prescriptions": {
+    "1": {
+      "id": 1,
+      "patientId": "PT-006",
+      "patient": "Sarah Johnson",
+      "medication": "Lisinopril",
+      "dosage": "10mg",
+      "frequency": "Once daily",
+      "duration": "30 days",
+      "instructions": "Take in the morning with food",
+      "dateIssued": "2024-01-15"
+    },
+    "2": {
+      "id": 2,
+      "patientId": "PT-005",
+      "patient": "Michael Brown",
+      "medication": "Metformin",
+      "dosage": "500mg",
+      "frequency": "Twice daily",
+      "duration": "90 days",
+      "instructions": "Take with meals",
+      "dateIssued": "2024-01-14"
+    },
+    "3": {
+      "id": 3,
+      "patientId": "PT-004",
+      "patient": "Emily Davis",
+      "medication": "Atorvastatin",
+      "dosage": "20mg",
+      "frequency": "Once daily",
+      "duration": "30 days",
+      "instructions": "Take at bedtime",
+      "dateIssued": "2024-01-16"
+    }
+  },
+  "alerts": {
+    "1": {
+      "id": 1,
+      "patientId": "PT-006",
+      "patient": "Sarah Johnson",
+      "type": "BP Abnormal",
+      "message": "Blood pressure reading of 158/98 mmHg detected at 4:20 PM",
+      "severity": "critical",
+      "time": "10 minutes ago"
+    },
+    "2": {
+      "id": 2,
+      "patientId": "PT-003",
+      "patient": "Robert Wilson",
+      "type": "Irregular Heartbeat",
+      "message": "Heart rate fluctuation detected - ranging from 55 to 110 bpm",
+      "severity": "high",
+      "time": "25 minutes ago"
+    },
+    "3": {
+      "id": 3,
+      "patientId": "PT-004",
+      "patient": "Emily Davis",
+      "type": "High Blood Sugar",
+      "message": "Blood glucose level at 195 mg/dL, above target range",
+      "severity": "high",
+      "time": "1 hour ago"
+    },
+    "4": {
+      "id": 4,
+      "patientId": "PT-002",
+      "patient": "Jane Smith",
+      "type": "Medication Missed",
+      "message": "Patient missed scheduled insulin dose at 2:00 PM",
+      "severity": "warning",
+      "time": "2 hours ago"
+    },
+    "5": {
+      "id": 5,
+      "patientId": "PT-001",
+      "patient": "John Doe",
+      "type": "Low Heart Rate",
+      "message": "Heart rate dropped to 52 bpm during rest period",
+      "severity": "warning",
+      "time": "3 hours ago"
+    }
+  },
+  "reports": {
+    "1": {
+      "id": 1,
+      "patientId": "PT-006",
+      "patient": "Sarah Johnson",
+      "type": "Monthly Health Summary",
+      "date": "January 2024",
+      "status": "ready",
+      "pages": 8
+    },
+    "2": {
+      "id": 2,
+      "patientId": "PT-005",
+      "patient": "Michael Brown",
+      "type": "Diabetes Progress Report",
+      "date": "January 2024",
+      "status": "ready",
+      "pages": 12
+    },
+    "3": {
+      "id": 3,
+      "patientId": "PT-004",
+      "patient": "Emily Davis",
+      "type": "Cardiac Monitoring Report",
+      "date": "December 2023",
+      "status": "ready",
+      "pages": 15
+    },
+    "4": {
+      "id": 4,
+      "patientId": "PT-003",
+      "patient": "Robert Wilson",
+      "type": "Blood Pressure Analysis",
+      "date": "January 2024",
+      "status": "processing",
+      "pages": 0
+    },
+    "5": {
+      "id": 5,
+      "patientId": "PT-002",
+      "patient": "Jane Smith",
+      "type": "Weekly Vitals Report",
+      "date": "Week of Jan 15, 2024",
+      "status": "ready",
+      "pages": 5
+    },
+    "6": {
+      "id": 6,
+      "patientId": "PT-001",
+      "patient": "John Doe",
+      "type": "Medication Compliance Report",
+      "date": "January 2024",
+      "status": "ready",
+      "pages": 6
+    }
+  }
+}
