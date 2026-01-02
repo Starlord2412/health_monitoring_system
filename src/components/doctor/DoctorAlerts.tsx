@@ -203,87 +203,101 @@
 
 
 
-
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { AlertTriangle, Bell, Heart, Activity } from "lucide-react";
 
-type Severity = "critical" | "high" | "warning" | "info";
+import { db } from "../../lib/firebase";
+import { ref, onValue } from "firebase/database";
 
-type Alert = {
+type AlertItem = {
   id: number;
+  patientId: string;
   patient: string;
   type: string;
   message: string;
-  severity: Severity;
-  time: string; // or Date string coming from backend
-  icon?: "alert" | "heart" | "activity" | "bell"; // optional icon key from DB
+  severity: "critical" | "high" | "warning" | "info" | string;
+  time: string;
 };
 
-const iconMap: Record<NonNullable<Alert["icon"]>, React.ComponentType<any>> = {
-  alert: AlertTriangle,
-  heart: Heart,
-  activity: Activity,
-  bell: Bell,
-};
-
-const getSeverityColor = (severity: Severity) => {
-  const colors: Record<Severity, string> = {
+const getSeverityColor = (severity: string) => {
+  const colors = {
     critical: "bg-red-100 text-red-800 border border-red-200",
     high: "bg-orange-100 text-orange-800 border border-orange-200",
     warning: "bg-amber-100 text-amber-800 border border-amber-200",
     info: "bg-blue-100 text-blue-800 border border-blue-200",
   };
-  return colors[severity] || "bg-slate-100 text-slate-700";
+  return colors[severity as keyof typeof colors] || "bg-slate-100 text-slate-700";
 };
 
-const getIconColor = (severity: Severity) => {
-  const colors: Record<Severity, string> = {
+const getIconColor = (severity: string) => {
+  const colors = {
     critical: "text-red-500",
     high: "text-orange-500",
     warning: "text-amber-500",
     info: "text-blue-500",
   };
-  return colors[severity] || "text-slate-500";
+  return colors[severity as keyof typeof colors] || "text-slate-500";
+};
+
+// map severity → icon component
+const severityToIcon: Record<string, React.ComponentType<any>> = {
+  critical: AlertTriangle,
+  high: Heart,
+  warning: Bell,
+  info: Activity,
 };
 
 export function DoctorAlerts() {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    const alertsRef = ref(db, "alerts");
 
-        // TODO: change this URL to your real backend route
-        const res = await fetch("/api/alerts");
-        if (!res.ok) {
-          throw new Error("Failed to fetch alerts");
+    const unsub = onValue(
+      alertsRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setAlerts([]);
+          setLoading(false);
+          return;
         }
 
-        const data: Alert[] = await res.json();
-        setAlerts(data);
-      } catch (err: any) {
-        setError(err.message ?? "Error fetching alerts");
-      } finally {
+        const data = snapshot.val() as Record<string, any>;
+        const list: AlertItem[] = Object.values(data).map((item: any) => ({
+          id: item.id,
+          patientId: item.patientId,
+          patient: item.patient,
+          type: item.type,
+          message: item.message,
+          severity: item.severity,
+          time: item.time,
+        }));
+
+        // optional: sort critical/high first
+        const order = { critical: 0, high: 1, warning: 2, info: 3 };
+        list.sort(
+          (a, b) =>
+            (order[a.severity as keyof typeof order] ?? 99) -
+            (order[b.severity as keyof typeof order] ?? 99)
+        );
+
+        setAlerts(list);
+        setLoading(false);
+      },
+      () => {
+        setAlerts([]);
         setLoading(false);
       }
-    };
+    );
 
-    fetchAlerts();
+    return () => unsub();
   }, []);
 
-  const handleDismiss = async (id: number) => {
-    // Optional: call backend to mark alert as resolved
-    // await fetch(`/api/alerts/${id}`, { method: "DELETE" });
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
-  };
+  const hasAlerts = alerts.length > 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -299,12 +313,7 @@ export function DoctorAlerts() {
             </p>
           </div>
           <div className="hidden gap-3 sm:flex">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAlerts([])}
-              disabled={alerts.length === 0}
-            >
+            <Button variant="outline" size="sm">
               Clear all
             </Button>
             <Button size="sm" className="bg-teal-500 hover:bg-teal-600">
@@ -331,25 +340,16 @@ export function DoctorAlerts() {
 
           <CardContent className="pt-0">
             {loading && (
-              <div className="flex items-center justify-center px-8 py-8 text-sm text-slate-500">
-                Loading alerts...
-              </div>
+              <p className="py-8 text-center text-sm text-slate-500">
+                Loading alerts…
+              </p>
             )}
 
-            {error && !loading && (
-              <div className="flex items-center justify-center px-8 py-8 text-sm text-red-600">
-                {error}
-              </div>
-            )}
-
-            {!loading && !error && alerts.length > 0 && (
+            {!loading && hasAlerts && (
               <div className="space-y-3">
                 {alerts.map((alert) => {
-                  const IconComponent =
-                    alert.icon && iconMap[alert.icon]
-                      ? iconMap[alert.icon]
-                      : AlertTriangle;
-
+                  const Icon =
+                    severityToIcon[alert.severity] ?? AlertTriangle;
                   return (
                     <Card
                       key={alert.id}
@@ -358,7 +358,7 @@ export function DoctorAlerts() {
                       <CardContent className="p-4">
                         <div className="flex items-start gap-4">
                           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50">
-                            <IconComponent
+                            <Icon
                               className={`h-5 w-5 ${getIconColor(
                                 alert.severity
                               )}`}
@@ -400,7 +400,6 @@ export function DoctorAlerts() {
                                   variant="outline"
                                   size="sm"
                                   className="text-xs"
-                                  onClick={() => handleDismiss(alert.id)}
                                 >
                                   Dismiss
                                 </Button>
@@ -421,7 +420,7 @@ export function DoctorAlerts() {
               </div>
             )}
 
-            {!loading && !error && alerts.length === 0 && (
+            {!loading && !hasAlerts && (
               <div className="flex flex-col items-center justify-center px-8 py-12 text-center">
                 <Bell className="mb-4 h-10 w-10 text-slate-300" />
                 <p className="text-sm font-medium text-slate-700">
@@ -439,4 +438,3 @@ export function DoctorAlerts() {
     </div>
   );
 }
-
