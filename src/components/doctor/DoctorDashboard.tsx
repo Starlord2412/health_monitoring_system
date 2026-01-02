@@ -11,65 +11,27 @@ import {
 import { Activity, Users, AlertTriangle, Heart } from "lucide-react";
 
 const mockPatients = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    bp: "145/92",
-    hr: 78,
-    sugar: 145,
-    riskLevel: "high",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    bp: "120/80",
-    hr: 72,
-    sugar: 95,
-    riskLevel: "low",
-  },
-  {
-    id: 3,
-    name: "Emily Davis",
-    bp: "138/88",
-    hr: 85,
-    sugar: 125,
-    riskLevel: "medium",
-  },
-  {
-    id: 4,
-    name: "Robert Wilson",
-    bp: "155/95",
-    hr: 92,
-    sugar: 180,
-    riskLevel: "high",
-  },
-  {
-    id: 5,
-    name: "Lisa Anderson",
-    bp: "118/75",
-    hr: 68,
-    sugar: 88,
-    riskLevel: "low",
-  },
-  {
-    id: 6,
-    name: "David Martinez",
-    bp: "132/85",
-    hr: 80,
-    sugar: 110,
-    riskLevel: "medium",
-  },
+  { id: 1, name: "Sarah Johnson", bp: "145/92", hr: 78, sugar: 145, riskLevel: "high" },
+  { id: 2, name: "Michael Chen", bp: "120/80", hr: 72, sugar: 95, riskLevel: "low" },
+  { id: 3, name: "Emily Davis", bp: "138/88", hr: 85, sugar: 125, riskLevel: "medium" },
+  { id: 4, name: "Robert Wilson", bp: "155/95", hr: 92, sugar: 180, riskLevel: "high" },
+  { id: 5, name: "Lisa Anderson", bp: "118/75", hr: 68, sugar: 88, riskLevel: "low" },
+  { id: 6, name: "David Martinez", bp: "132/85", hr: 80, sugar: 110, riskLevel: "medium" },
 ];
 
 const getRiskBadge = (level: string) => {
   const variants = {
-    high: "bg-red-100 text-red-800 border-red-200",
-    medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    low: "bg-green-100 text-green-800 border-green-200",
+    high: "bg-red-100 text-red-800 border border-red-200",
+    medium: "bg-amber-100 text-amber-800 border border-amber-200",
+    low: "bg-emerald-100 text-emerald-800 border border-emerald-200",
   };
   return (
-    <Badge className={variants[level as keyof typeof variants] || ""}>
-      {level.toUpperCase()}
+    <Badge
+      className={`text-[11px] font-medium uppercase ${
+        variants[level as keyof typeof variants] || "bg-slate-100 text-slate-700"
+      }`}
+    >
+      {level}
     </Badge>
   );
 };
@@ -77,54 +39,78 @@ const getRiskBadge = (level: string) => {
 export function DoctorDashboard() {
   const stats = [
     {
-      title: "Total Patients",
-      value: "24",
-      icon: Users,
-      color: "text-blue-600",
-      bg: "bg-blue-100",
-    },
-    {
-      title: "Active Alerts",
-      value: "3",
-      icon: AlertTriangle,
-      color: "text-red-600",
-      bg: "bg-red-100",
-    },
-    {
-      title: "Avg Heart Rate",
-      value: "79",
-      icon: Heart,
-      color: "text-pink-600",
-      bg: "bg-pink-100",
-    },
-    {
-      title: "Critical Cases",
-      value: "2",
+      title: "Overall health score",
+      value: "85",
+      subtitle: "Good, stable condition",
       icon: Activity,
-      color: "text-orange-600",
-      bg: "bg-orange-100",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    {
+      title: "Heart rate",
+      value: "79 bpm",
+      subtitle: "Average today",
+      icon: Heart,
+      color: "text-rose-500",
+      bg: "bg-rose-50",
+    },
+    {
+      title: "Blood pressure",
+      value: "120/80",
+      subtitle: "Within normal range",
+      icon: Activity,
+      color: "text-sky-500",
+      bg: "bg-sky-50",
+    },
+    {
+      title: "Oxygen level",
+      value: "98%",
+      subtitle: "Stable saturation",
+      icon: Users,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
     },
   ];
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Doctor Dashboard</h1>
-        <p className="text-slate-600">Welcome back, Dr. Smith</p>
+    <div className="space-y-6">
+      {/* Top text like “Family health overview” */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+          Doctor dashboard
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+          Today&apos;s patient overview
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Monthly vitals, activity, and alerts for your patient panel.
+        </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Stat cards row */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Card
+            key={stat.title}
+            className="border-none bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+          >
+            <CardContent className="flex h-full flex-col justify-between p-5">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm text-slate-600">{stat.title}</p>
-                  <p className="text-3xl mt-2">{stat.value}</p>
+                  <p className="text-xs font-medium text-slate-500">
+                    {stat.title}
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-900">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {stat.subtitle}
+                  </p>
                 </div>
-                <div className={`${stat.bg} p-3 rounded-full`}>
-                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                <div
+                  className={`${stat.bg} flex h-9 w-9 items-center justify-center rounded-full`}
+                >
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
               </div>
             </CardContent>
@@ -132,34 +118,70 @@ export function DoctorDashboard() {
         ))}
       </div>
 
-      {/* Patients Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Assigned Patients</CardTitle>
+      {/* Patients table */}
+      <Card className="border-none bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-base font-semibold text-slate-900">
+              Assigned patients
+            </CardTitle>
+            <p className="mt-1 text-xs text-slate-500">
+              Vital stats for patients currently under your care.
+            </p>
+          </div>
+          <Badge
+            variant="outline"
+            className="rounded-full border-emerald-100 bg-emerald-50 text-[11px] font-medium text-emerald-700"
+          >
+            {mockPatients.length} patients
+          </Badge>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Patient Name</TableHead>
-                <TableHead>Blood Pressure</TableHead>
-                <TableHead>Heart Rate</TableHead>
-                <TableHead>Blood Sugar</TableHead>
-                <TableHead>Risk Level</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>{patient.name}</TableCell>
-                  <TableCell>{patient.bp} mmHg</TableCell>
-                  <TableCell>{patient.hr} bpm</TableCell>
-                  <TableCell>{patient.sugar} mg/dL</TableCell>
-                  <TableCell>{getRiskBadge(patient.riskLevel)}</TableCell>
+        <CardContent className="pt-0">
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-slate-100">
+                  <TableHead className="text-xs font-medium text-slate-500">
+                    Patient
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500">
+                    Blood pressure
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500">
+                    Heart rate
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500">
+                    Blood sugar
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500">
+                    Risk
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {mockPatients.map((patient) => (
+                  <TableRow
+                    key={patient.id}
+                    className="border-slate-100 hover:bg-emerald-50/40"
+                  >
+                    <TableCell className="text-sm font-medium text-slate-800">
+                      {patient.name}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      {patient.bp} mmHg
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      {patient.hr} bpm
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      {patient.sugar} mg/dL
+                    </TableCell>
+                    <TableCell>{getRiskBadge(patient.riskLevel)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

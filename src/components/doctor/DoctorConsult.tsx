@@ -36,25 +36,29 @@ const mockMessages = [
   {
     id: 1,
     sender: "patient",
-    message: "Good morning doctor, I have some questions about my medication",
+    message:
+      "Good morning doctor, I have some questions about my medication",
     time: "9:30 AM",
   },
   {
     id: 2,
     sender: "doctor",
-    message: "Good morning! Of course, I'm here to help. What questions do you have?",
+    message:
+      "Good morning! Of course, I'm here to help. What questions do you have?",
     time: "9:32 AM",
   },
   {
     id: 3,
     sender: "patient",
-    message: "Should I take my blood pressure medication before or after meals?",
+    message:
+      "Should I take my blood pressure medication before or after meals?",
     time: "9:35 AM",
   },
   {
     id: 4,
     sender: "doctor",
-    message: "It's best to take your Lisinopril in the morning with food. This helps reduce any potential side effects and ensures consistent absorption.",
+    message:
+      "It's best to take your Lisinopril in the morning with food. This helps reduce any potential side effects and ensures consistent absorption.",
     time: "9:37 AM",
   },
   {
@@ -74,9 +78,12 @@ export function DoctorConsult() {
     if (message.trim()) {
       const newMessage = {
         id: messages.length + 1,
-        sender: "doctor",
-        message: message,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sender: "doctor" as const,
+        message,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setMessages([...messages, newMessage]);
       setMessage("");
@@ -84,118 +91,171 @@ export function DoctorConsult() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Consultation</h1>
-        <p className="text-slate-600">Chat with patients and their families</p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Page header */}
+      <div className="border-b bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 lg:px-8">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Consultation
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Chat with patients and their families in real time.
+            </p>
+          </div>
+          <div className="hidden gap-3 sm:flex">
+            <Button variant="outline" size="sm">
+              Conversation history
+            </Button>
+            <Button size="sm" className="bg-teal-500 hover:bg-teal-600">
+              New consult
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-150">
-        {/* Chat List */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Conversations</CardTitle>
-          </CardHeader>
+      {/* Content */}
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <Card className="border-slate-200 shadow-sm">
           <CardContent className="p-0">
-            <div className="divide-y">
-              {mockChats.map((chat) => (
-                <button
-                  key={chat.id}
-                  onClick={() => setSelectedChat(chat)}
-                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors ${
-                    selectedChat.id === chat.id ? "bg-blue-50" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <Avatar>
-                      <AvatarFallback>{chat.avatar}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p>{chat.patient}</p>
-                        <p className="text-xs text-slate-500">{chat.time}</p>
-                      </div>
-                      <p className="text-sm text-slate-600 truncate">{chat.lastMessage}</p>
-                    </div>
-                    {chat.unread > 0 && (
-                      <div className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {chat.unread}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Chat Window */}
-        <Card className="lg:col-span-2 flex flex-col">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarFallback>{selectedChat.avatar}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-lg">{selectedChat.patient}</CardTitle>
-                  <p className="text-sm text-slate-600">Active now</p>
+            <div className="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:divide-x lg:divide-slate-100">
+              {/* Chat List */}
+              <div className="border-b border-slate-100 lg:border-b-0">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <p className="text-xs font-medium tracking-tight text-slate-500">
+                    Conversations
+                  </p>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
+                    {mockChats.length} active
+                  </span>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Phone className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Video className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender === "doctor" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      msg.sender === "doctor"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-900"
-                    }`}
-                  >
-                    <p>{msg.message}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        msg.sender === "doctor" ? "text-blue-100" : "text-slate-500"
+                <div className="divide-y divide-slate-100">
+                  {mockChats.map((chat) => (
+                    <button
+                      key={chat.id}
+                      onClick={() => setSelectedChat(chat)}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition ${
+                        selectedChat.id === chat.id
+                          ? "bg-teal-50"
+                          : "hover:bg-slate-50"
                       }`}
                     >
-                      {msg.time}
-                    </p>
+                      <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-teal-500 text-xs font-semibold text-white">
+                          {chat.avatar}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 flex items-center justify-between gap-2">
+                          <p className="truncate text-sm font-medium text-slate-900">
+                            {chat.patient}
+                          </p>
+                          <p className="whitespace-nowrap text-[11px] text-slate-400">
+                            {chat.time}
+                          </p>
+                        </div>
+                        <p className="truncate text-xs text-slate-500">
+                          {chat.lastMessage}
+                        </p>
+                      </div>
+                      {chat.unread > 0 && (
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[11px] font-semibold text-white">
+                          {chat.unread}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chat Window */}
+              <div className="lg:col-span-2 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-teal-500 text-xs font-semibold text-white">
+                        {selectedChat.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-sm font-semibold">
+                        {selectedChat.patient}
+                      </CardTitle>
+                      <p className="text-xs text-emerald-600">
+                        Active now
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Phone className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Video className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              ))}
+
+                <div className="flex-1 overflow-y-auto bg-slate-50 px-4 py-4">
+                  <div className="mx-auto flex max-w-xl flex-col gap-3">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${
+                          msg.sender === "doctor"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
+                            msg.sender === "doctor"
+                              ? "bg-teal-500 text-white rounded-br-sm"
+                              : "bg-white text-slate-900 rounded-bl-sm"
+                          }`}
+                        >
+                          <p>{msg.message}</p>
+                          <p
+                            className={`mt-1 text-[11px] ${
+                              msg.sender === "doctor"
+                                ? "text-teal-100"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {msg.time}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 bg-white px-4 py-3">
+                  <div className="mx-auto flex max-w-xl gap-2">
+                    <Input
+                      placeholder="Type your message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      className="text-sm"
+                    />
+                    <Button
+                      onClick={handleSendMessage}
+                      className="bg-teal-500 hover:bg-teal-600"
+                      size="icon"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
-          <div className="border-t p-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Type your message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <Button onClick={handleSendMessage}>
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
         </Card>
       </div>
     </div>

@@ -17,7 +17,7 @@ import { DoctorPrescription } from "./components/doctor/DoctorPrescription";
 import { DoctorConsult } from "./components/doctor/DoctorConsult";
 import AdminDashboard from "./components/admin/adminLayout";
 import AboutPage from "./components/AboutPage";
-import HealthTrackDashboard from "./components/patient/patientLayout";
+import HealthTrackDashboard from "./components/patient/patientLayout.tsx";
 import FAQPage from "./components/FAQPage";
 import "./index.css";
 
