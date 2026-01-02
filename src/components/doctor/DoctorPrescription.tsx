@@ -21,13 +21,13 @@ import {
 } from "../ui/dialog";
 import { Plus, Edit, Pill } from "lucide-react";
 
-// ⬇️ Firebase imports
-import { getDatabase, ref, onValue, push, set } from "firebase/database";
-import { app } from "../../lib/firebase"; // <-- change path to your config
+// Firebase imports
+import { getDatabase, ref, onValue, push, set, update } from "firebase/database";
+import { app } from "../../lib/firebase";
 
-// Type for a prescription
 type Prescription = {
   id: number;
+  firebaseKey?: string; // <-- key in RTDB
   patient: string;
   patientId?: string;
   medication: string;
@@ -51,7 +51,13 @@ export function DoctorPrescription() {
     instructions: "",
   });
 
-  // 🔹 Read prescriptions from Realtime DB
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingPrescription, setEditingPrescription] = useState<
+    Prescription | null
+  >(null);
+
+  // Read prescriptions from Realtime DB
   useEffect(() => {
     const db = getDatabase(app);
     const prescriptionsRef = ref(db, "prescriptions");
@@ -64,18 +70,35 @@ export function DoctorPrescription() {
         return;
       }
 
-      // data is an object like { "-Nx1...": { ... }, "-Nx2...": { ... } }
-      const list: Prescription[] = Object.values(data);
+      // include firebase key on each item
+      const list: Prescription[] = Object.entries(data).map(
+        ([key, value]: [string, any]) => ({
+          ...(value as Prescription),
+          firebaseKey: key,
+        })
+      );
       setPrescriptions(list);
       setLoading(false);
     });
 
-    // cleanup listener
     return () => unsubscribe();
   }, []);
 
-  // 🔹 Add prescription to Realtime DB
-  const handleAddPrescription = async () => {
+  const resetForm = () => {
+    setNewPrescription({
+      patient: "",
+      medication: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+      instructions: "",
+    });
+    setIsEditing(false);
+    setEditingPrescription(null);
+  };
+
+  // Add or update prescription
+  const handleSavePrescription = async () => {
     if (
       !newPrescription.patient ||
       !newPrescription.medication ||
@@ -86,25 +109,57 @@ export function DoctorPrescription() {
 
     const db = getDatabase(app);
     const prescriptionsRef = ref(db, "prescriptions");
-    const newRef = push(prescriptionsRef);
 
-    const prescription: Prescription = {
-      ...newPrescription,
-      id: Date.now(), // or use some other ID logic
-      dateIssued: new Date().toISOString().split("T")[0],
-    };
+    if (isEditing && editingPrescription?.firebaseKey) {
+      // UPDATE existing
+      const itemRef = ref(
+        db,
+        `prescriptions/${editingPrescription.firebaseKey}`
+      );
 
-    await set(newRef, prescription);
+      const updated: Prescription = {
+        ...editingPrescription,
+        ...newPrescription,
+        // keep same id and dateIssued when editing
+      };
 
-    // clear form (list will auto-update from onValue)
+      await update(itemRef, updated);
+    } else {
+      // CREATE new
+      const newRef = push(prescriptionsRef);
+
+      const prescription: Prescription = {
+        ...newPrescription,
+        id: Date.now(),
+        dateIssued: new Date().toISOString().split("T")[0],
+      };
+
+      await set(newRef, prescription);
+    }
+
+    resetForm();
+    setDialogOpen(false);
+  };
+
+  // when clicking Edit on a card
+  const handleEditClick = (prescription: Prescription) => {
+    setIsEditing(true);
+    setEditingPrescription(prescription);
     setNewPrescription({
-      patient: "",
-      medication: "",
-      dosage: "",
-      frequency: "",
-      duration: "",
-      instructions: "",
+      patient: prescription.patient,
+      medication: prescription.medication,
+      dosage: prescription.dosage,
+      frequency: prescription.frequency,
+      duration: prescription.duration,
+      instructions: prescription.instructions,
     });
+    setDialogOpen(true);
+  };
+
+  // when clicking New prescription button
+  const handleNewClick = () => {
+    resetForm();
+    setDialogOpen(true);
   };
 
   return (
@@ -120,9 +175,15 @@ export function DoctorPrescription() {
               Manage patient medications, schedules, and instructions.
             </p>
           </div>
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
-              <Button className="bg-teal-500 hover:bg-teal-600">
+              <Button
+                className="bg-teal-500 hover:bg-teal-600"
+                onClick={handleNewClick}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 New prescription
               </Button>
@@ -131,7 +192,7 @@ export function DoctorPrescription() {
             <DialogContent className="max-w-2xl rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl">
               <DialogHeader className="border-b border-slate-200 pb-3">
                 <DialogTitle className="text-lg font-semibold text-teal-600">
-                  Add new prescription
+                  {isEditing ? "Edit prescription" : "Add new prescription"}
                 </DialogTitle>
               </DialogHeader>
 
@@ -148,10 +209,10 @@ export function DoctorPrescription() {
                     <Select
                       value={newPrescription.patient}
                       onValueChange={(value) =>
-                        setNewPrescription({
-                          ...newPrescription,
+                        setNewPrescription((prev) => ({
+                          ...prev,
                           patient: value,
-                        })
+                        }))
                       }
                     >
                       <SelectTrigger className="mt-1 h-9 text-sm bg-white border border-slate-300 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80">
@@ -185,10 +246,10 @@ export function DoctorPrescription() {
                       id="medication"
                       value={newPrescription.medication}
                       onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
+                        setNewPrescription((prev) => ({
+                          ...prev,
                           medication: e.target.value,
-                        })
+                        }))
                       }
                       placeholder="e.g., Lisinopril"
                       className="mt-1 h-9 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
@@ -209,10 +270,10 @@ export function DoctorPrescription() {
                       id="dosage"
                       value={newPrescription.dosage}
                       onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
+                        setNewPrescription((prev) => ({
+                          ...prev,
                           dosage: e.target.value,
-                        })
+                        }))
                       }
                       placeholder="e.g., 10mg"
                       className="mt-1 h-9 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
@@ -229,10 +290,10 @@ export function DoctorPrescription() {
                     <Select
                       value={newPrescription.frequency}
                       onValueChange={(value) =>
-                        setNewPrescription({
-                          ...newPrescription,
+                        setNewPrescription((prev) => ({
+                          ...prev,
                           frequency: value,
-                        })
+                        }))
                       }
                     >
                       <SelectTrigger className="mt-1 h-9 text-sm bg-white border border-slate-300 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80">
@@ -266,10 +327,10 @@ export function DoctorPrescription() {
                       id="duration"
                       value={newPrescription.duration}
                       onChange={(e) =>
-                        setNewPrescription({
-                          ...newPrescription,
+                        setNewPrescription((prev) => ({
+                          ...prev,
                           duration: e.target.value,
-                        })
+                        }))
                       }
                       placeholder="e.g., 30 days"
                       className="mt-1 h-9 text-sm bg-white border border-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80"
@@ -289,10 +350,10 @@ export function DoctorPrescription() {
                     id="instructions"
                     value={newPrescription.instructions}
                     onChange={(e) =>
-                      setNewPrescription({
-                        ...newPrescription,
+                      setNewPrescription((prev) => ({
+                        ...prev,
                         instructions: e.target.value,
-                      })
+                      }))
                     }
                     placeholder="Special instructions for the patient..."
                     rows={3}
@@ -303,9 +364,9 @@ export function DoctorPrescription() {
                 {/* Button */}
                 <Button
                   className="mt-2 w-full bg-teal-500 hover:bg-teal-600 text-white font-medium shadow-md shadow-teal-500/40"
-                  onClick={handleAddPrescription}
+                  onClick={handleSavePrescription}
                 >
-                  Add prescription
+                  {isEditing ? "Save changes" : "Add prescription"}
                 </Button>
               </div>
             </DialogContent>
@@ -335,7 +396,7 @@ export function DoctorPrescription() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {prescriptions.map((prescription) => (
                 <Card
-                  key={prescription.id}
+                  key={prescription.firebaseKey ?? prescription.id}
                   className="border-slate-200 bg-white/80 shadow-none transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
                 >
                   <CardHeader className="pb-3">
@@ -357,6 +418,7 @@ export function DoctorPrescription() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-slate-400 hover:text-slate-700"
+                        onClick={() => handleEditClick(prescription)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
