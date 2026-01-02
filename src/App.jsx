@@ -11,7 +11,7 @@ import SignupPage from "./components/signup";
 import LoginPage from "./components/login";
 import { DoctorLayout } from "./components/doctor/DoctorLayout";
 import { DoctorDashboard } from "./components/doctor/DoctorDashboard";
-import { PatientsList } from "./components/doctor/PatientsList";
+import { PatientsList } from "./components/doctor/PatientsList.tsx";
 import { DoctorAlerts } from "./components/doctor/DoctorAlerts";
 import { DoctorReports } from "./components/doctor/DoctorReports";
 import { DoctorPrescription } from "./components/doctor/DoctorPrescription";
