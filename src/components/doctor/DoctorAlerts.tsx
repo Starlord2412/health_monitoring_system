@@ -8,7 +8,7 @@ import { db } from "../../lib/firebase";
 import { ref, onValue, remove } from "firebase/database";
 
 type AlertItem = {
-  id: number;
+  id: number; // same as Firebase key: /alerts/{id}
   patientId: string;
   patient: string;
   type: string;
@@ -65,15 +65,19 @@ export function DoctorAlerts() {
 
         const data = snapshot.val() as Record<string, any>;
 
-        const list: AlertItem[] = Object.values(data).map((item: any) => ({
-          id: item.id,
-          patientId: item.patientId,
-          patient: item.patient,
-          type: item.type,
-          message: item.message,
-          severity: item.severity,
-          time: item.time,
-        }));
+        // IMPORTANT: assume /alerts looks like:
+        // alerts: { "1": {...}, "2": {...} }
+        const list: AlertItem[] = Object.entries(data).map(
+          ([key, item]: [string, any]) => ({
+            id: Number(item.id ?? key), // use item.id or key
+            patientId: item.patientId,
+            patient: item.patient,
+            type: item.type,
+            message: item.message,
+            severity: item.severity,
+            time: item.time,
+          })
+        );
 
         const order = { critical: 0, high: 1, warning: 2, info: 3 };
         list.sort(
@@ -99,6 +103,16 @@ export function DoctorAlerts() {
   const handleClearAll = async () => {
     try {
       await remove(ref(db, "alerts"));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDismiss = async (id: number) => {
+    try {
+      // if firebase node path is /alerts/{id}
+      await remove(ref(db, `alerts/${id}`));
+      // onValue listener will refresh alerts automatically
     } catch (e) {
       console.error(e);
     }
@@ -210,6 +224,7 @@ export function DoctorAlerts() {
                                   variant="outline"
                                   size="sm"
                                   className="text-xs"
+                                  onClick={() => handleDismiss(alert.id)}
                                 >
                                   Dismiss
                                 </Button>
