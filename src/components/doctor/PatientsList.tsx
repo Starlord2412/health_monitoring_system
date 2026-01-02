@@ -1006,7 +1006,7 @@ export function PatientsList() {
                                     key={idx}
                                     className="relative border-l-2 border-emerald-500 pl-4"
                                   >
-                                    <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow" />
+                                    <span className="absolute -left-1.75 top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow" />
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
                                         <p className="text-[11px] font-medium text-slate-500">
