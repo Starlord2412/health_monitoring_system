@@ -394,6 +394,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+
 import {
   Select,
   SelectContent,
@@ -765,7 +766,7 @@ export function DoctorPrescription() {
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {prescriptions.length} records
+                {loading ? "Loading..." : `${prescriptions.length} records`}
               </span>
             </div>
           </CardHeader>
