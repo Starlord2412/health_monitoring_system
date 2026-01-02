@@ -1,4 +1,9 @@
-import { useState } from "react";
+// src/components/doctor/PatientsList.tsx
+import { useEffect, useState } from "react";
+import { ref, onValue, query, orderByChild, equalTo } from "firebase/database";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { db } from "../../lib/firebase"; // adjust path if needed
+
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -11,96 +16,101 @@ import {
 } from "../ui/dialog";
 import { Eye, Activity } from "lucide-react";
 
-const mockPatients = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    age: 45,
-    condition: "Hypertension",
-    lastVisit: "2024-01-15",
-    status: "active",
-    timeline: [
-      {
-        date: "2024-01-15 09:00",
-        event: "BP Reading",
-        value: "145/92 mmHg",
-        status: "high",
-      },
-      {
-        date: "2024-01-15 12:00",
-        event: "HR Reading",
-        value: "78 bpm",
-        status: "normal",
-      },
-      {
-        date: "2024-01-15 15:00",
-        event: "Medication Taken",
-        value: "Lisinopril 10mg",
-        status: "normal",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    age: 32,
-    condition: "Type 2 Diabetes",
-    lastVisit: "2024-01-14",
-    status: "stable",
-    timeline: [
-      {
-        date: "2024-01-14 08:30",
-        event: "Blood Sugar",
-        value: "95 mg/dL",
-        status: "normal",
-      },
-      {
-        date: "2024-01-14 14:00",
-        event: "Insulin Dose",
-        value: "10 units",
-        status: "normal",
-      },
-      {
-        date: "2024-01-14 20:00",
-        event: "Blood Sugar",
-        value: "110 mg/dL",
-        status: "normal",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Emily Davis",
-    age: 56,
-    condition: "Cardiac Monitoring",
-    lastVisit: "2024-01-16",
-    status: "active",
-    timeline: [
-      {
-        date: "2024-01-16 10:00",
-        event: "ECG Test",
-        value: "Normal Sinus Rhythm",
-        status: "normal",
-      },
-      {
-        date: "2024-01-16 11:30",
-        event: "BP Reading",
-        value: "138/88 mmHg",
-        status: "medium",
-      },
-      {
-        date: "2024-01-16 16:00",
-        event: "HR Reading",
-        value: "85 bpm",
-        status: "normal",
-      },
-    ],
-  },
-];
+type PatientFromDb = {
+  fullName: string;
+  age: number;
+  email?: string;
+  assignedDoctor: string;
+  lastVisit?: string;
+  status?: "active" | "stable" | "critical";
+};
+
+type TimelineItem = {
+  date: string;
+  event: string;
+  value: string;
+  status: "high" | "medium" | "normal";
+};
+
+type Patient = {
+  id: string;
+  name: string;
+  age: number;
+  condition: string;
+  lastVisit: string;
+  status: "active" | "stable" | "critical";
+  timeline: TimelineItem[];
+};
 
 export function PatientsList() {
-  const [selectedPatient, setSelectedPatient] =
-    useState<(typeof mockPatients)[0] | null>(null);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [doctorName, setDoctorName] = useState<string | null>(null);
+
+  // 1) Get current doctor info from Auth
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setDoctorName(null);
+        setPatients([]);
+        setLoading(false);
+        return;
+      }
+
+      // use displayName or custom doctor name
+      const name = user.displayName || user.email || "";
+      setDoctorName(name);
+    });
+
+    return () => unsubAuth();
+  }, []);
+
+  // 2) Once doctorName is known, load only that doctor’s patients
+  useEffect(() => {
+    if (!doctorName) return;
+
+    setLoading(true);
+
+    // patients node path – adjust if your DB uses a different path
+    const patientsRef = ref(db, "patients");
+
+    // query by assignedDoctor
+ const q = query(
+  patientsRef,
+  orderByChild("assignedDoctor"),
+  equalTo(doctorName)
+);
+ // orderByChild+equalTo filters records by a child field.[web:7][web:16]
+
+    const unsubscribe = onValue(q, (snapshot) => {
+      const data = snapshot.val() as Record<string, PatientFromDb> | null;
+
+      if (!data) {
+        setPatients([]);
+        setLoading(false);
+        return;
+      }
+
+      const loadedPatients: Patient[] = Object.entries(data).map(
+        ([id, value]) => ({
+          id,
+          name: value.fullName,
+          age: value.age,
+          condition: "General checkup",
+          lastVisit: value.lastVisit || "Not available",
+          status: value.status || "active",
+          timeline: [],
+        })
+      );
+
+      setPatients(loadedPatients);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [doctorName]);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -130,7 +140,7 @@ export function PatientsList() {
               Patients
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Overview of all monitored patients and their recent activity.
+              Overview of your assigned patients and their recent activity.
             </p>
           </div>
           <div className="hidden gap-3 sm:flex">
@@ -156,14 +166,26 @@ export function PatientsList() {
                 </p>
               </div>
               <Badge variant="outline" className="text-xs font-normal">
-                Total: {mockPatients.length}
+                {loading ? "Loading..." : `Total: ${patients.length}`}
               </Badge>
             </div>
           </CardHeader>
 
           <CardContent>
+            {doctorName === null && !loading && (
+              <p className="text-xs text-slate-500">
+                Sign in as a doctor to see assigned patients.
+              </p>
+            )}
+
+            {!loading && doctorName && patients.length === 0 && (
+              <p className="text-xs text-slate-500">
+                No patients assigned to you yet.
+              </p>
+            )}
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {mockPatients.map((patient) => (
+              {patients.map((patient) => (
                 <Card
                   key={patient.id}
                   className="border-slate-200 bg-white/80 shadow-none transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
@@ -214,54 +236,65 @@ export function PatientsList() {
                             Profile
                           </Button>
                         </DialogTrigger>
-                       <DialogContent className="max-w-xl rounded-3xl bg-white shadow-xl">
-  <DialogHeader>
-    <DialogTitle className="text-lg font-semibold text-slate-900">
-      Patient profile
-    </DialogTitle>
-    <p className="text-xs text-slate-500">
-      Basic demographics and current monitoring status.
-    </p>
-  </DialogHeader>
+                        <DialogContent className="max-w-xl rounded-3xl bg-white shadow-xl">
+                          <DialogHeader>
+                            <DialogTitle className="text-lg font-semibold text-slate-900">
+                              Patient profile
+                            </DialogTitle>
+                            <p className="text-xs text-slate-500">
+                              Basic demographics and current monitoring status.
+                            </p>
+                          </DialogHeader>
 
-  <div className="mt-4 grid grid-cols-2 gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
-    <div>
-      <p className="text-[11px] font-medium text-slate-500">Name</p>
-      <p className="mt-0.5 font-semibold text-slate-900">
-        {patient.name}
-      </p>
-    </div>
-    <div>
-      <p className="text-[11px] font-medium text-slate-500">Age</p>
-      <p className="mt-0.5 text-slate-800">{patient.age} years</p>
-    </div>
-    <div>
-      <p className="text-[11px] font-medium text-slate-500">
-        Primary condition
-      </p>
-      <p className="mt-0.5 text-slate-800">{patient.condition}</p>
-    </div>
-    <div>
-      <p className="text-[11px] font-medium text-slate-500">
-        Last visit
-      </p>
-      <p className="mt-0.5 text-slate-800">{patient.lastVisit}</p>
-    </div>
-    <div>
-      <p className="text-[11px] font-medium text-slate-500">Status</p>
-      <div className="mt-1 inline-flex items-center gap-2">
-        <Badge
-          className={`rounded-full px-2 py-0.5 text-[10px] capitalize ${getStatusColor(
-            patient.status
-          )}`}
-        >
-          {patient.status}
-        </Badge>
-      </div>
-    </div>
-  </div>
-</DialogContent>
-
+                          <div className="mt-4 grid grid-cols-2 gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-500">
+                                Name
+                              </p>
+                              <p className="mt-0.5 font-semibold text-slate-900">
+                                {patient.name}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-500">
+                                Age
+                              </p>
+                              <p className="mt-0.5 text-slate-800">
+                                {patient.age} years
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-500">
+                                Primary condition
+                              </p>
+                              <p className="mt-0.5 text-slate-800">
+                                {patient.condition}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-500">
+                                Last visit
+                              </p>
+                              <p className="mt-0.5 text-slate-800">
+                                {patient.lastVisit}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-500">
+                                Status
+                              </p>
+                              <div className="mt-1 inline-flex items-center gap-2">
+                                <Badge
+                                  className={`rounded-full px-2 py-0.5 text-[10px] capitalize ${getStatusColor(
+                                    patient.status
+                                  )}`}
+                                >
+                                  {patient.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
                       </Dialog>
 
                       {/* Timeline Dialog */}
@@ -281,44 +314,49 @@ export function PatientsList() {
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl rounded-3xl bg-white shadow-xl">
-  <DialogHeader>
-    <DialogTitle className="text-lg font-semibold text-slate-900">
-      Health timeline
-    </DialogTitle>
-    <p className="text-xs text-slate-500">
-      Sequential record of recent readings and interventions for {patient.name}.
-    </p>
-  </DialogHeader>
+                          <DialogHeader>
+                            <DialogTitle className="text-lg font-semibold text-slate-900">
+                              Health timeline
+                            </DialogTitle>
+                            <p className="text-xs text-slate-500">
+                              Sequential record of recent readings and
+                              interventions for {patient.name}.
+                            </p>
+                          </DialogHeader>
 
-  <div className="mt-4 max-h-80 space-y-4 overflow-y-auto rounded-2xl border border-emerald-100 bg-slate-50 p-4">
-    {patient.timeline.map((item, idx) => (
-      <div
-        key={idx}
-        className="relative border-l-2 border-emerald-500 pl-4"
-      >
-        <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow" />
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-medium text-slate-500">
-              {item.date}
-            </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              {item.event}
-            </p>
-            <p
-              className={`mt-0.5 text-sm font-medium ${getEventStatusColor(
-                item.status
-              )}`}
-            >
-              {item.value}
-            </p>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</DialogContent>
-
+                          <div className="mt-4 max-h-80 space-y-4 overflow-y-auto rounded-2xl border border-emerald-100 bg-slate-50 p-4">
+                            {patient.timeline.length === 0 && (
+                              <p className="text-xs text-slate-500">
+                                No timeline data yet.
+                              </p>
+                            )}
+                            {patient.timeline.map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="relative border-l-2 border-emerald-500 pl-4"
+                              >
+                                <span className="absolute -left-1.75 top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow" />
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="text-[11px] font-medium text-slate-500">
+                                      {item.date}
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                                      {item.event}
+                                    </p>
+                                    <p
+                                      className={`mt-0.5 text-sm font-medium ${getEventStatusColor(
+                                        item.status
+                                      )}`}
+                                    >
+                                      {item.value}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </DialogContent>
                       </Dialog>
                     </div>
                   </CardContent>

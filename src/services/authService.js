@@ -1,5 +1,11 @@
 // src/services/authService.js
-
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  signOut,
+} from "firebase/auth";
+import { auth } from "../lib/firebase";
 import {
   saveUser,
   validateCredentials,
@@ -7,143 +13,180 @@ import {
   getCurrentUser,
   logout as logoutUser,
   getUserByUsername,
-} from '../utils/storage';
+} from "../utils/storage";
+
+// Helper: map role -> displayName prefix (for doctors)
+const roleToDisplayName = (role, username) => {
+  if (role === "doctor") {
+    // doctor ka displayName jo patients me assignedDoctor se match kare
+    // e.g. username "Smith" => "Dr. Smith"
+    return `Dr. ${username}`;
+  }
+  return username;
+};
 
 /**
  * Register a new user
+ * - Firebase Auth pe account banata hai (email = username@example.com)
+ * - displayName set karta hai (specially doctors ke liye "Dr. {username}")
+ * - Local storage me bhi user save karta hai (tumhara purana flow)
  */
 export const register = async (userData) => {
   try {
-    // Validate input
     if (!userData.username || !userData.password || !userData.role) {
       return {
         success: false,
-        error: 'All fields are required',
+        error: "All fields are required",
       };
     }
 
-    // Check if user already exists
+    // Local storage duplicate check as before
     const existingUser = getUserByUsername(userData.username);
     if (existingUser) {
       return {
         success: false,
-        error: 'Username already taken',
+        error: "Username already taken",
       };
     }
 
-    // Save user (password will be stored as-is for demo purposes)
-    // In production, you should hash the password before storing
+    // Email bana lete hain from username (demo ke liye)
+    const email = `${userData.username}@healthtrack.demo`;
+
+    // Firebase Auth: create user
+    const cred = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      userData.password
+    ); // [web:74]
+
+    const displayName = roleToDisplayName(userData.role, userData.username);
+
+    // Set displayName (important for doctor->patients match)
+    await updateProfile(cred.user, {
+      displayName,
+    }); // [web:70][web:68]
+
+    // Local storage me bhi user save (role ke saath)
     const result = saveUser({
       username: userData.username,
       password: userData.password,
       role: userData.role,
+      uid: cred.user.uid,
+      displayName,
     });
 
     if (result.success) {
       return {
         success: true,
-        message: 'Account created successfully',
-        user: result.user,
+        message: "Account created successfully",
+        user: {
+          ...result.user,
+          uid: cred.user.uid,
+          displayName,
+        },
       };
     }
 
     return {
       success: false,
-      error: result.error || 'Failed to create account',
+      error: result.error || "Failed to create account",
     };
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     return {
       success: false,
-      error: 'An error occurred during registration',
+      error: error.message || "An error occurred during registration",
     };
   }
 };
 
 /**
  * Login user
+ * - Firebase Auth se login
+ * - local storage ke user record se role leke navigation decide
  */
 export const login = async (username, password) => {
   try {
-    // Validate input
     if (!username || !password) {
       return {
         success: false,
-        error: 'Username and password are required',
+        error: "Username and password are required",
       };
     }
 
-    // Validate credentials
+    const email = `${username}@healthtrack.demo`;
+
+    // Firebase Auth login
+    const cred = await signInWithEmailAndPassword(auth, email, password); // [web:74]
+
+    // Local storage credentials validate karo (role wagaira ke liye)
     const result = validateCredentials(username, password);
-    
+
     if (!result.success) {
       return {
         success: false,
-        error: result.error,
+        error: result.error || "Invalid credentials",
       };
     }
 
-    // Set current user
-    setCurrentUser(result.user);
+    // current user state local storage me
+    setCurrentUser({
+      ...result.user,
+      uid: cred.user.uid,
+      displayName: cred.user.displayName,
+    });
 
     return {
       success: true,
-      message: 'Login successful',
-      user: result.user,
+      message: "Login successful",
+      user: {
+        ...result.user,
+        uid: cred.user.uid,
+        displayName: cred.user.displayName,
+      },
     };
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return {
       success: false,
-      error: 'An error occurred during login',
+      error: error.message || "An error occurred during login",
     };
   }
 };
 
 /**
- * Logout current user
+ * Logout current user (Firebase + local storage)
  */
-export const logout = () => {
+export const logout = async () => {
   try {
+    await signOut(auth); // [web:27]
     logoutUser();
     return {
       success: true,
-      message: 'Logged out successfully',
+      message: "Logged out successfully",
     };
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     return {
       success: false,
-      error: 'An error occurred during logout',
+      error: "An error occurred during logout",
     };
   }
 };
 
-/**
- * Get current authenticated user
- */
 export const getAuthenticatedUser = () => {
   return getCurrentUser();
 };
 
-/**
- * Check if user is authenticated
- */
 export const isAuthenticated = () => {
   return getCurrentUser() !== null;
 };
 
-/**
- * Check if user has specific role
- */
 export const hasRole = (role) => {
   const user = getCurrentUser();
   return user && user.role === role;
 };
 
-/**
- * Check if user has any of the specified roles
- */
 export const hasAnyRole = (roles) => {
   const user = getCurrentUser();
   return user && roles.includes(user.role);

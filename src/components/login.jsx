@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Heart } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { login } from '../services/authService';
+// src/components/login.jsx
+import React, { useState, useEffect } from "react";
+import { Eye, EyeOff, Heart } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { login } from "../services/authService";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [formData, setFormData] = useState({
-    username: location.state?.username || '',
-    password: '',
+    username: location.state?.username || "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
+  const [successMessage, setSuccessMessage] = useState(
+    location.state?.message || ""
+  );
 
   useEffect(() => {
-    // Clear success message after 5 seconds
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(''), 5000);
+      const timer = setTimeout(() => setSuccessMessage(""), 5000);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
@@ -28,11 +30,11 @@ export default function LoginPage() {
     const newErrors = {};
 
     if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
+      newErrors.username = "Username is required";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     }
 
     return newErrors;
@@ -47,48 +49,47 @@ export default function LoginPage() {
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: '',
+        [name]: "",
       }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
       setErrors({});
-      
+
       try {
         const result = await login(formData.username, formData.password);
 
         if (result.success) {
-          console.log('Login successful:', result.user);
-          
-          // Redirect based on role
+          const user = result.user;
+
           const redirectMap = {
-            patient: '/patient',
-            doctor: '/doctor',
-            admin: '/admin',
-            family: '/family'
+            patient: "/patient",
+            doctor: "/doctor",
+            admin: "/admin",
+            family: "/family",
           };
-          
-          const redirectPath = redirectMap[result.user.role] || '/';
-          navigate(redirectPath, { 
-            state: { user: result.user },
+
+          const redirectPath = redirectMap[user.role] || "/";
+          navigate(redirectPath, {
+            state: { user },
             replace: true,
           });
         } else {
           setErrors({
-            submit: result.error || 'Login failed',
+            submit: result.error || "Login failed",
           });
         }
       } catch (error) {
-        console.error('Login error:', error);
+        console.error("Login error:", error);
         setErrors({
-          submit: 'An unexpected error occurred. Please try again.',
+          submit: "An unexpected error occurred. Please try again.",
         });
       } finally {
         setIsLoading(false);
@@ -99,8 +100,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-500 via-teal-400 to-cyan-500 flex items-center justify-center p-4">
-      {/* Background decoration */}
+    <div className="min-h-screen bg-linear-to-br from-teal-500 via-teal-400 to-cyan-500 flex items-center justify-center p-4">
       <div className="absolute top-10 left-10 opacity-20">
         <Heart size={40} className="text-white animate-pulse" />
       </div>
@@ -108,9 +108,7 @@ export default function LoginPage() {
         <Heart size={60} className="text-white" />
       </div>
 
-      {/* Main card */}
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full relative z-10">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Heart className="text-teal-600" size={32} />
@@ -119,7 +117,6 @@ export default function LoginPage() {
           <p className="text-gray-600 text-lg">Welcome Back</p>
         </div>
 
-        {/* Success message */}
         {successMessage && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-700 text-sm flex items-center gap-2">
@@ -128,7 +125,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Error message */}
         {errors.submit && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-700 text-sm flex items-center gap-2">
@@ -137,11 +133,12 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label
+              htmlFor="username"
+              className="block text-sm font-semibold text-gray-700 mb-2"
+            >
               Username
             </label>
             <input
@@ -153,8 +150,8 @@ export default function LoginPage() {
               placeholder="Enter your username"
               className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none ${
                 errors.username
-                  ? 'border-red-500 focus:border-red-600'
-                  : 'border-gray-300 focus:border-teal-500'
+                  ? "border-red-500 focus:border-red-600"
+                  : "border-gray-300 focus:border-teal-500"
               }`}
               disabled={isLoading}
               autoComplete="username"
@@ -166,14 +163,16 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-semibold text-gray-700 mb-2"
+            >
               Password
             </label>
             <div className="relative">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
@@ -181,8 +180,8 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none pr-12 ${
                   errors.password
-                    ? 'border-red-500 focus:border-red-600'
-                    : 'border-gray-300 focus:border-teal-500'
+                    ? "border-red-500 focus:border-red-600"
+                    : "border-gray-300 focus:border-teal-500"
                 }`}
                 disabled={isLoading}
                 autoComplete="current-password"
@@ -203,11 +202,10 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Forgot Password Link */}
           <div className="text-right">
             <button
               type="button"
-              onClick={() => navigate('/forgot-password')}
+              onClick={() => navigate("/forgot-password")}
               className="text-sm text-teal-600 hover:underline"
               disabled={isLoading}
             >
@@ -215,35 +213,45 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg ${
+            className={`w-full bg-linear-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-lg transition-all shadow-lg ${
               isLoading
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:from-teal-600 hover:to-teal-700 hover:shadow-xl transform hover:scale-105'
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:from-teal-600 hover:to-teal-700 hover:shadow-xl transform hover:scale-105"
             }`}
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
                 Logging in...
               </span>
             ) : (
-              'Login'
+              "Login"
             )}
           </button>
         </form>
 
-        {/* Footer */}
         <p className="text-center text-gray-600 mt-6">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <button
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate("/signup")}
             className="text-teal-600 font-semibold hover:underline"
             disabled={isLoading}
           >
