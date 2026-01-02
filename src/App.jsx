@@ -4,7 +4,7 @@ import HomePage from "./pages/homepage";
 import FamilyLayout from "./components/family/FamilyLayout";
 import FamilyDashboard from "./components/family/FamilyDashboard";
 import AlertsPage from "./components/family/AlertsPage";
-import ReportsPage from "./components/family/ReportsPage";
+import ReportsPage from "./components/family/ReportsPage.tsx";
 import MedicationPage from "./components/family/MedicationPage";
 import ContactDoctorPage from "./components/family/ContactDoctorPage";
 import SignupPage from "./components/signup";
