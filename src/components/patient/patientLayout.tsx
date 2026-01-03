@@ -27,12 +27,23 @@ type Doctor = {
   username?: string;
 };
 
+type PatientDetails = {
+  firstName: string;
+  lastName: string;
+  age: number | null;
+  lastVisit: string;
+  primaryCondition: "stable" | "unstable" | "not_good";
+};
+
 export default function HealthTrackDashboard() {
   const [activeTab, setActiveTab] = useState<
     "home" | "alerts" | "medication" | "reports" | "consult" | "doctors"
   >("home");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMedicationModal, setShowMedicationModal] = useState(false);
+
+  // NEW: patient details modal
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Patient Data State
   const [patient, setPatient] = useState({
@@ -99,6 +110,18 @@ export default function HealthTrackDashboard() {
     { label: "Sat", value: 120 },
   ];
 
+  // NEW: patientDetails state
+  const [patientDetails, setPatientDetails] = useState<PatientDetails>({
+    firstName: "",
+    lastName: "",
+    age: null,
+    lastVisit: "",
+    primaryCondition: "stable",
+  });
+
+  const [savingDetails, setSavingDetails] = useState(false);
+  const [detailsMsg, setDetailsMsg] = useState<string | null>(null);
+
   // Handlers
   const handleSaveVitals = () => {
     setVitals(editVitals);
@@ -118,7 +141,7 @@ export default function HealthTrackDashboard() {
     setAppointments(appointments.filter((a) => a.id !== id));
   };
 
-  // NEW: doctors + assigned doctor state
+  // doctors + assigned doctor state
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctorUid, setSelectedDoctorUid] = useState<string>("");
   const [assignMsg, setAssignMsg] = useState<string | null>(null);
@@ -149,7 +172,7 @@ export default function HealthTrackDashboard() {
     return () => unsub();
   }, []);
 
-  // Load assigned doctor name for current patient
+  // Load assigned doctor + patient basic info + patient details
   useEffect(() => {
     if (!patientUid) return;
     const pRef = ref(db, `patients/${patientUid}`);
@@ -164,6 +187,24 @@ export default function HealthTrackDashboard() {
             ? `Connected to ${p.assignedDoctorName}`
             : "No doctor assigned",
         }));
+      }
+      if (p.details) {
+        setPatientDetails({
+          firstName: p.details.firstName || "",
+          lastName: p.details.lastName || "",
+          age:
+            typeof p.details.age === "number"
+              ? p.details.age
+              : p.details.age
+              ? Number(p.details.age)
+              : null,
+          lastVisit: p.details.lastVisit || "",
+          primaryCondition:
+            p.details.primaryCondition === "unstable" ||
+            p.details.primaryCondition === "not_good"
+              ? p.details.primaryCondition
+              : "stable",
+        });
       }
     });
     return () => unsub();
@@ -200,6 +241,36 @@ export default function HealthTrackDashboard() {
     } catch (err) {
       console.error("Assign doctor error:", err);
       setAssignMsg("Could not assign doctor. Please try again.");
+    }
+  };
+
+  // NEW: save patient details to DB
+  const handleSaveDetails = async () => {
+    if (!patientUid) {
+      setDetailsMsg("Please log in as patient to save details.");
+      return;
+    }
+    try {
+      setSavingDetails(true);
+      setDetailsMsg(null);
+
+      await update(ref(db, `patients/${patientUid}`), {
+        details: {
+          ...patientDetails,
+          age:
+            patientDetails.age !== null && !Number.isNaN(patientDetails.age)
+              ? patientDetails.age
+              : null,
+        },
+      });
+
+      setDetailsMsg("Details saved successfully.");
+      setShowDetailsModal(false);
+    } catch (err) {
+      console.error("Save patient details error:", err);
+      setDetailsMsg("Could not save details. Please try again.");
+    } finally {
+      setSavingDetails(false);
     }
   };
 
@@ -264,7 +335,7 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Hero Section
+  // Hero Section (with Details button before Health score)
   const HeroSection = () => (
     <div className="bg-[#cfeee6]">
       <div className="mx-auto flex max-w-6xl items-start justify-between px-6 pb-8 pt-10">
@@ -279,6 +350,34 @@ export default function HealthTrackDashboard() {
             Monitor vitals, activity, and alerts for your loved one in real
             time.
           </p>
+
+          {/* NEW: patient details summary + button */}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setShowDetailsModal(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white hover:bg-slate-800"
+            >
+              <User className="h-3.5 w-3.5" />
+              Details
+            </button>
+            <p className="text-xs text-slate-700">
+              {patientDetails.firstName || patientDetails.lastName
+                ? `${patientDetails.firstName} ${patientDetails.lastName}`.trim()
+                : "No personal details added yet"}
+              {patientDetails.age
+                ? ` • Age ${patientDetails.age}`
+                : ""}
+              {patientDetails.primaryCondition
+                ? ` • Condition: ${
+                    patientDetails.primaryCondition === "stable"
+                      ? "Stable"
+                      : patientDetails.primaryCondition === "unstable"
+                      ? "Unstable"
+                      : "Not good"
+                  }`
+                : ""}
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-4">
@@ -299,7 +398,7 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Vitals Cards + Trend
+  // Vitals Cards + Trend (unchanged)
   const VitalsCards = () => {
     const maxValue = Math.max(...vitalsTrend.map((v) => v.value));
     const minValue = Math.min(...vitalsTrend.map((v) => v.value));
@@ -325,7 +424,7 @@ export default function HealthTrackDashboard() {
 
             {/* Heart Rate */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex itemsकरने center justify-between">
+              <div className="mb-4 flex items-center justify-between">
                 <p className="text-xs text-slate-500">Heart rate</p>
                 <Heart className="text-rose-500" size={18} />
               </div>
@@ -353,7 +452,7 @@ export default function HealthTrackDashboard() {
 
             {/* Oxygen Level */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex itemsकरने center justify-between">
+              <div className="mb-4 flex items-center justify-between">
                 <p className="text-xs text-slate-500">Oxygen level</p>
                 <div className="text-emerald-500">
                   <svg
@@ -386,9 +485,6 @@ export default function HealthTrackDashboard() {
                   Vitals trend
                 </h3>
               </div>
-              <button className="rounded-full bg-slate-100 px-4 py-1.5 text-xs font-medium text-slate-700">
-                Today
-              </button>
             </div>
 
             <div className="flex h-48 items-end justify-between gap-8">
@@ -461,63 +557,28 @@ export default function HealthTrackDashboard() {
     );
   };
 
-  // Medications and Appointments
-  const ContentSection = () => (
+  // Home content: Appointments only
+  const HomeContentSection = () => (
     <div className="bg-white">
       <div className="mx-auto max-w-6xl px-6 py-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Medications */}
+          {/* Placeholder left card */}
+          <div className="rounded-3xl bg-white p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+            <h3 className="text-base font-semibold text-slate-900">
+              Overview
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Summary widgets can be added here later.
+            </p>
+          </div>
+
+          {/* Appointments card */}
           <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] border border-slate-100">
             <div className="mb-6 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                <Pill size={18} className="text-emerald-500" /> Medications
-              </h3>
-              <button
-                onClick={() => setShowMedicationModal(true)}
-                className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors"
-              >
-                <Plus size={14} /> Add
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {medications.map((med) => (
-                <div
-                  key={med.id}
-                  className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 hover:bg-slate-100 transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {med.name}
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      {med.dosage} • {med.frequency}
-                    </p>
-                    <p className="mt-1 text-xs font-medium text-emerald-600">
-                      Next: {med.nextDose}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteMedication(med.id)}
-                    className="rounded-lg bg-rose-50 p-2 text-rose-600 hover:bg-rose-100 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Appointments */}
-          <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] border border-slate-100">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="flex itemsकरने center gap-2 text-base font-semibold text-slate-900">
                 <Calendar size={18} className="text-emerald-500" />{" "}
                 Appointments
               </h3>
-              <button className="flex itemsकरने center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors">
-                <Plus size={14} /> Add
-              </button>
             </div>
 
             <div className="space-y-3">
@@ -552,11 +613,59 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Doctors tab UI
+  // Medication tab (full medications list)
+  const MedicationTab = () => (
+    <div className="bg-[#cfeee6] pb-10 pt-8">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="rounded-3xl bg-white p-8 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Medication management
+            </h2>
+            <button
+              onClick={() => setShowMedicationModal(true)}
+              className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors"
+            >
+              <Plus size={14} /> Add medication
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {medications.map((med) => (
+              <div
+                key={med.id}
+                className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 hover:bg-slate-100 transition-colors"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {med.name}
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    {med.dosage} • {med.frequency}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-emerald-600">
+                    Next: {med.nextDose}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDeleteMedication(med.id)}
+                  className="rounded-lg bg-rose-50 p-2 text-rose-600 hover:bg-rose-100 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Doctors tab UI (with appointments on right)
   const DoctorsTab = () => (
     <div className="bg-[#cfeee6] pb-10 pt-8">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="grid gap-6 md:grid-cols-[2fr,1.2fr]">
+        <div className="grid gap-6 md:grid-cols-[2fr,1.5fr]">
           {/* left: doctors list */}
           <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -620,7 +729,7 @@ export default function HealthTrackDashboard() {
             </div>
           </div>
 
-          {/* right: current assigned doctor info */}
+          {/* right: current doctor + appointments */}
           <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <h2 className="mb-2 text-sm font-semibold text-slate-900">
@@ -634,6 +743,46 @@ export default function HealthTrackDashboard() {
                 appearing in your dashboard and will see your health
                 data.
               </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Upcoming appointments
+                </h2>
+              </div>
+              {appointments.length === 0 ? (
+                <p className="py-2 text-xs text-slate-500">
+                  No appointments scheduled.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {appointments.map((apt) => (
+                    <div
+                      key={apt.id}
+                      className="flex items-center justify-between rounded-xl bg-slate-50 p-3 text-sm"
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          {apt.type}
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          {apt.date} at {apt.time}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {apt.doctor}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteAppointment(apt.id)}
+                        className="rounded-lg bg-rose-50 p-2 text-rose-600 hover:bg-rose-100 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -761,6 +910,136 @@ export default function HealthTrackDashboard() {
     );
   };
 
+  // NEW: Patient Details Modal
+  const PatientDetailsModal = () => {
+    const [localDetails, setLocalDetails] = useState<PatientDetails>({
+      ...patientDetails,
+    });
+
+    const updateField = (
+      key: keyof PatientDetails,
+      value: string | number
+    ) => {
+      setLocalDetails((prev) => ({
+        ...prev,
+        [key]: key === "age" ? (value === "" ? null : Number(value)) : value,
+      }));
+    };
+
+    const onSaveClick = async () => {
+      setPatientDetails(localDetails);
+      await handleSaveDetails();
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            Patient details
+          </h2>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  First name
+                </label>
+                <input
+                  value={localDetails.firstName}
+                  onChange={(e) =>
+                    updateField("firstName", e.target.value)
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  Last name
+                </label>
+                <input
+                  value={localDetails.lastName}
+                  onChange={(e) =>
+                    updateField("lastName", e.target.value)
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Age
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={
+                  localDetails.age !== null ? localDetails.age : ""
+                }
+                onChange={(e) => updateField("age", e.target.value)}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Last visit
+              </label>
+              <input
+                placeholder="e.g. 2026-01-02 10:30 AM"
+                value={localDetails.lastVisit}
+                onChange={(e) =>
+                  updateField("lastVisit", e.target.value)
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Primary condition
+              </label>
+              <select
+                value={localDetails.primaryCondition}
+                onChange={(e) =>
+                  updateField(
+                    "primaryCondition",
+                    e.target
+                      .value as PatientDetails["primaryCondition"]
+                  )
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 bg-white"
+              >
+                <option value="stable">Stable</option>
+                <option value="unstable">Unstable</option>
+                <option value="not_good">Not good</option>
+              </select>
+            </div>
+
+            {detailsMsg && (
+              <p className="text-xs text-emerald-700">{detailsMsg}</p>
+            )}
+          </div>
+
+          <div className="mt-5 flex gap-3">
+            <button
+              onClick={() => setShowDetailsModal(false)}
+              className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-xs font-medium text-slate-800 hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSaveClick}
+              disabled={savingDetails}
+              className="flex-1 rounded-full bg-emerald-500 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {savingDetails ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#cfeee6]">
       <Header />
@@ -769,7 +1048,7 @@ export default function HealthTrackDashboard() {
         <>
           <HeroSection />
           <VitalsCards />
-          <ContentSection />
+          <HomeContentSection />
         </>
       )}
 
@@ -788,20 +1067,7 @@ export default function HealthTrackDashboard() {
         </div>
       )}
 
-      {activeTab === "medication" && (
-        <div className="bg-[#cfeee6] pb-10 pt-8">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="rounded-3xl bg-white p-8 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <h2 className="mb-3 text-xl font-semibold text-slate-900">
-                Medication management
-              </h2>
-              <p className="text-sm text-slate-600">
-                Full medication schedule and history coming soon...
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {activeTab === "medication" && <MedicationTab />}
 
       {activeTab === "reports" && (
         <div className="bg-[#cfeee6] pb-10 pt-8">
@@ -837,6 +1103,7 @@ export default function HealthTrackDashboard() {
 
       {showEditModal && <EditVitalsModal />}
       {showMedicationModal && <AddMedicationModal />}
+      {showDetailsModal && <PatientDetailsModal />}
     </div>
   );
 }
