@@ -1,11 +1,12 @@
-// src/services/authService.js
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   signOut,
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
+import { ref, set, get, update } from "firebase/database"; // [web:18]
+
 import {
   saveUser,
   validateCredentials,
@@ -18,8 +19,6 @@ import {
 // Helper: map role -> displayName prefix (for doctors)
 const roleToDisplayName = (role, username) => {
   if (role === "doctor") {
-    // doctor ka displayName jo patients me assignedDoctor se match kare
-    // e.g. username "Smith" => "Dr. Smith"
     return `Dr. ${username}`;
   }
   return username;
@@ -27,9 +26,6 @@ const roleToDisplayName = (role, username) => {
 
 /**
  * Register a new user
- * - Firebase Auth pe account banata hai (email = username@example.com)
- * - displayName set karta hai (specially doctors ke liye "Dr. {username}")
- * - Local storage me bhi user save karta hai (tumhara purana flow)
  */
 export const register = async (userData) => {
   try {
@@ -40,7 +36,7 @@ export const register = async (userData) => {
       };
     }
 
-    // Local storage duplicate check as before
+    // Local storage duplicate check
     const existingUser = getUserByUsername(userData.username);
     if (existingUser) {
       return {
@@ -49,7 +45,6 @@ export const register = async (userData) => {
       };
     }
 
-    // Email bana lete hain from username (demo ke liye)
     const email = `${userData.username}@healthtrack.demo`;
 
     // Firebase Auth: create user
@@ -59,19 +54,40 @@ export const register = async (userData) => {
       userData.password
     ); // [web:74]
 
+    const uid = cred.user.uid;
     const displayName = roleToDisplayName(userData.role, userData.username);
 
-    // Set displayName (important for doctor->patients match)
+    // Set displayName
     await updateProfile(cred.user, {
       displayName,
-    }); // [web:70][web:68]
+    }); // [web:82]
 
-    // Local storage me bhi user save (role ke saath)
+    // Realtime Database: users/{uid}
+    await set(ref(db, `users/${uid}`), {
+      uid,
+      username: userData.username,
+      email,
+      role: userData.role,
+      displayName,
+      createdAt: Date.now(),
+    }); // [web:73][web:89]
+
+    // If patient: patients/{uid}
+    if (userData.role === "patient") {
+      await set(ref(db, `patients/${uid}`), {
+        name: userData.username,
+        email,
+        assignedDoctorId: null,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Local storage
     const result = saveUser({
       username: userData.username,
       password: userData.password,
       role: userData.role,
-      uid: cred.user.uid,
+      uid,
       displayName,
     });
 
@@ -81,7 +97,7 @@ export const register = async (userData) => {
         message: "Account created successfully",
         user: {
           ...result.user,
-          uid: cred.user.uid,
+          uid,
           displayName,
         },
       };
@@ -102,8 +118,6 @@ export const register = async (userData) => {
 
 /**
  * Login user
- * - Firebase Auth se login
- * - local storage ke user record se role leke navigation decide
  */
 export const login = async (username, password) => {
   try {
@@ -117,11 +131,25 @@ export const login = async (username, password) => {
     const email = `${username}@healthtrack.demo`;
 
     // Firebase Auth login
-    const cred = await signInWithEmailAndPassword(auth, email, password); // [web:74]
+    const cred = await signInWithEmailAndPassword(auth, email, password); // [web:64]
+    const uid = cred.user.uid;
 
-    // Local storage credentials validate karo (role wagaira ke liye)
+    // Realtime DB: users/{uid}
+    const snap = await get(ref(db, `users/${uid}`));
+    if (!snap.exists()) {
+      return {
+        success: false,
+        error: "User profile not found in database",
+      };
+    }
+    const dbUser = snap.val();
+
+    await update(ref(db, `users/${uid}`), {
+      lastLogin: Date.now(),
+    });
+
+    // localStorage validation (existing logic)
     const result = validateCredentials(username, password);
-
     if (!result.success) {
       return {
         success: false,
@@ -129,21 +157,19 @@ export const login = async (username, password) => {
       };
     }
 
-    // current user state local storage me
-    setCurrentUser({
+    const mergedUser = {
       ...result.user,
-      uid: cred.user.uid,
-      displayName: cred.user.displayName,
-    });
+      ...dbUser,
+      uid,
+      displayName: cred.user.displayName || dbUser.displayName,
+    };
+
+    setCurrentUser(mergedUser);
 
     return {
       success: true,
       message: "Login successful",
-      user: {
-        ...result.user,
-        uid: cred.user.uid,
-        displayName: cred.user.displayName,
-      },
+      user: mergedUser,
     };
   } catch (error) {
     console.error("Login error:", error);
@@ -154,12 +180,9 @@ export const login = async (username, password) => {
   }
 };
 
-/**
- * Logout current user (Firebase + local storage)
- */
 export const logout = async () => {
   try {
-    await signOut(auth); // [web:27]
+    await signOut(auth); // [web:37]
     logoutUser();
     return {
       success: true,

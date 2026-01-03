@@ -1,4 +1,4 @@
-// src/App.tsx or App.jsx
+// src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/homepage";
 import FamilyLayout from "./components/family/FamilyLayout";
@@ -22,7 +22,25 @@ import HealthTrackDashboard from "./components/patient/patientLayout";
 import FAQPage from "./components/FAQPage";
 import "./index.css";
 
+import { getAuthenticatedUser } from "./services/authService.js"; // ⬅️ ADD [web:96]
+
+// simple guard (optional but recommended)
+function RequireAuth({ children, allowedRoles }) {
+  const user = getAuthenticatedUser();
+  if (!user) {
+    // not logged in → login page
+    return <LoginPage />;
+  }
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // wrong role
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 export default function App() {
+  const user = getAuthenticatedUser(); // { uid, role, ... } or null
+
   return (
     <Routes>
       {/* Public */}
@@ -33,10 +51,21 @@ export default function App() {
       <Route path="/faq" element={<FAQPage />} />
 
       {/* Doctor Routes */}
-      <Route path="/doctor" element={<DoctorLayout />}>
+      <Route
+        path="/doctor"
+        element={
+          <RequireAuth allowedRoles={["doctor"]}>
+            <DoctorLayout user={user} /> {/* ⬅️ user pass */}
+          </RequireAuth>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DoctorDashboard />} />
-        <Route path="patients" element={<PatientsList />} />
+        {/* इथे doctorUid pass केला आहे */}
+        <Route
+          path="patients"
+          element={<PatientsList doctorUid={user?.uid || ""} />}
+        />
         <Route path="alerts" element={<DoctorAlerts />} />
         <Route path="reports" element={<DoctorReports />} />
         <Route path="prescription" element={<DoctorPrescription />} />
@@ -44,7 +73,14 @@ export default function App() {
       </Route>
 
       {/* Family Routes */}
-      <Route path="/family" element={<FamilyLayout />}>
+      <Route
+        path="/family"
+        element={
+          <RequireAuth allowedRoles={["family"]}>
+            <FamilyLayout />
+          </RequireAuth>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<FamilyDashboard />} />
         <Route path="alerts" element={<AlertsPage />} />
@@ -54,11 +90,26 @@ export default function App() {
       </Route>
 
       {/* Patient Routes */}
-      <Route path="/patient" element={<HealthTrackDashboard />}>
+      <Route
+        path="/patient"
+        element={
+          <RequireAuth allowedRoles={["patient"]}>
+            <HealthTrackDashboard />
+          </RequireAuth>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
-      <Route path="/admin" element={<AdminDashboard />} />
+      {/* Admin */}
+      <Route
+        path="/admin"
+        element={
+          <RequireAuth allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </RequireAuth>
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
