@@ -1,4 +1,5 @@
 // src/services/authService.js
+
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -6,8 +7,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth, db } from "../lib/firebase";
-import { ref, set, get, update } from "firebase/database"; // [web:18]
-
+import { ref, set, get, update } from "firebase/database"; // [web:35]
 import {
   saveUser,
   validateCredentials,
@@ -53,15 +53,15 @@ export const register = async (userData) => {
       auth,
       email,
       userData.password
-    ); // [web:74]
-
+    );
     const uid = cred.user.uid;
+
     const displayName = roleToDisplayName(userData.role, userData.username);
 
     // Set displayName
     await updateProfile(cred.user, {
       displayName,
-    }); // [web:82]
+    });
 
     // Realtime Database: users/{uid}
     await set(ref(db, `users/${uid}`), {
@@ -71,7 +71,7 @@ export const register = async (userData) => {
       role: userData.role,
       displayName,
       createdAt: Date.now(),
-    }); // [web:73][web:89]
+    }); // [web:74][web:87]
 
     // If patient: patients/{uid}
     if (userData.role === "patient") {
@@ -82,6 +82,14 @@ export const register = async (userData) => {
         assignedDoctorId: null,
         assignedDoctorName: null,
         createdAt: Date.now(),
+        // NEW: default details block
+        details: {
+          firstName: "",
+          lastName: "",
+          age: null,
+          lastVisit: "",
+          primaryCondition: "stable",
+        },
       });
     }
 
@@ -134,7 +142,7 @@ export const login = async (username, password) => {
     const email = `${username}@healthtrack.demo`;
 
     // Firebase Auth login
-    const cred = await signInWithEmailAndPassword(auth, email, password); // [web:64]
+    const cred = await signInWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
 
     // Realtime DB: users/{uid}
@@ -186,7 +194,7 @@ export const login = async (username, password) => {
 
 export const logout = async () => {
   try {
-    await signOut(auth); // [web:37]
+    await signOut(auth);
     logoutUser();
     return {
       success: true,
