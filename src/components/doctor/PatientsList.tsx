@@ -1,3 +1,4 @@
+// src/components/doctor/PatientsList.tsx
 import React, { useEffect, useState } from "react";
 import { db } from "../../lib/firebase";
 import {
@@ -46,10 +47,13 @@ interface PatientsListProps {
   doctorUid: string;
 }
 
-export function PatientsList({ doctorUid }: PatientsListProps) {
+export const PatientsList: React.FC<PatientsListProps> = ({
+  doctorUid,
+}) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] =
+    useState<Patient | null>(null);
 
   useEffect(() => {
     if (!doctorUid) {
@@ -63,7 +67,7 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
       patientsRef,
       orderByChild("assignedDoctorId"),
       equalTo(doctorUid)
-    ); // [web:38]
+    ); // फक्त accept झाल्यावर assign झालेले patients [web:38]
 
     const unsubscribe = onValue(
       q,
@@ -73,18 +77,19 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
           setLoading(false);
           return;
         }
-
         const data = snapshot.val() as Record<string, any>;
-        const mapped: Patient[] = Object.entries(data).map(([id, item]) => ({
-          id,
-          name: item.name ?? "Unknown",
-          age: item.age ?? 0,
-          condition: item.condition ?? "Not specified",
-          lastVisit: item.lastVisit ?? "Not available",
-          status: item.status ?? "stable",
-          timeline: item.timeline ?? [],
-        }));
-        setPatients(mapped);
+        const list: Patient[] = Object.entries(data).map(
+          ([id, item]) => ({
+            id,
+            name: item.name ?? "Unknown",
+            age: item.age ?? 0,
+            condition: item.condition ?? "Not specified",
+            lastVisit: item.lastVisit ?? "Not available",
+            status: item.status ?? "stable",
+            timeline: item.timeline ?? [],
+          })
+        );
+        setPatients(list);
         setLoading(false);
       },
       (err) => {
@@ -130,7 +135,8 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
               Patients
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Overview of your assigned patients and their recent activity.
+              Overview of your assigned patients and their recent
+              activity.
             </p>
           </div>
           <div className="hidden gap-3 sm:flex">
@@ -177,8 +183,7 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
                   No patients to show
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Add a patient to start monitoring their health
-                  data.
+                  Add a patient to start monitoring their health data.
                 </p>
               </div>
             ) : (
@@ -244,8 +249,8 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
                                 Patient profile
                               </DialogTitle>
                               <p className="text-xs text-slate-500">
-                                Basic demographics and current monitoring
-                                status.
+                                Basic demographics and current
+                                monitoring status.
                               </p>
                             </DialogHeader>
 
@@ -328,8 +333,8 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
                                 Health timeline
                               </DialogTitle>
                               <p className="text-xs text-slate-500">
-                                Sequential record of recent readings and
-                                interventions for{" "}
+                                Sequential record of recent readings
+                                and interventions for{" "}
                                 {patient.name}.
                               </p>
                             </DialogHeader>
@@ -384,4 +389,4 @@ export function PatientsList({ doctorUid }: PatientsListProps) {
       </div>
     </div>
   );
-}
+};

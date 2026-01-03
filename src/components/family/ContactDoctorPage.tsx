@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { Badge } from '../ui/badge';
+// src/components/family/ContactDoctorPage.tsx
+import { useState } from "react";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import { Badge } from "../ui/badge";
 import {
   Phone,
   Mail,
@@ -14,324 +15,345 @@ import {
   Send,
   User,
   Calendar,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 
+import { db } from "../../lib/firebase";
+import { ref, set, push } from "firebase/database"; // NEW [web:38][web:89]
+import { getAuthenticatedUser } from "../../services/authService"; // user info
+
+// For demo: map UI doctors to actual Firebase doctor UIDs
+// doctorUid1 इथे तुझ्या actual doctor चा uid टाक (users node मध्ये दिसतो)
 const doctors = [
   {
-    id: 1,
-    name: 'Dr. Sarah Johnson',
-    specialty: 'Primary Care Physician',
-    phone: '(555) 123-4567',
-    email: 'dr.johnson@healthcare.com',
-    location: 'Main Medical Center, Floor 3',
-    availability: 'Mon-Fri, 9:00 AM - 5:00 PM',
-    image: '👩⚕️',
+    id: "doctorUid1",
+    name: "Dr. Sarah Johnson",
+    specialty: "Primary Care Physician",
+    phone: "(555) 123-4567",
+    email: "dr.johnson@healthcare.com",
+    location: "Main Medical Center, Floor 3",
+    availability: "Mon-Fri, 9:00 AM - 5:00 PM",
+    image: "👩⚕️",
   },
   {
-    id: 2,
-    name: 'Dr. Michael Chen',
-    specialty: 'Cardiologist',
-    phone: '(555) 234-5678',
-    email: 'dr.chen@healthcare.com',
-    location: 'Heart Center, Floor 5',
-    availability: 'Mon, Wed, Fri, 8:00 AM - 4:00 PM',
-    image: '👨⚕️',
+    id: "doctorUid2",
+    name: "Dr. Michael Chen",
+    specialty: "Cardiologist",
+    phone: "(555) 234-5678",
+    email: "dr.chen@healthcare.com",
+    location: "Heart Center, Floor 5",
+    availability: "Mon, Wed, Fri, 8:00 AM - 4:00 PM",
+    image: "👨⚕️",
   },
   {
-    id: 3,
-    name: 'Dr. Emily Rodriguez',
-    specialty: 'Endocrinologist',
-    phone: '(555) 345-6789',
-    email: 'dr.rodriguez@healthcare.com',
-    location: 'Specialty Clinic, Floor 2',
-    availability: 'Tue, Thu, 10:00 AM - 6:00 PM',
-    image: '👩⚕️',
+    id: "doctorUid3",
+    name: "Dr. Emily Rodriguez",
+    specialty: "Endocrinologist",
+    phone: "(555) 345-6789",
+    email: "dr.rodriguez@healthcare.com",
+    location: "Specialty Clinic, Floor 2",
+    availability: "Tue, Thu, 10:00 AM - 6:00 PM",
+    image: "👩⚕️",
   },
 ];
 
 const recentMessages = [
   {
     id: 1,
-    doctor: 'Dr. Sarah Johnson',
-    subject: 'Follow-up on Blood Pressure',
-    date: '2024-12-28',
-    status: 'replied',
+    doctor: "Dr. Sarah Johnson",
+    subject: "Follow-up on Blood Pressure",
+    date: "2024-12-28",
+    status: "replied",
     preview:
-      'Thank you for your message. Your blood pressure readings look good...',
+      "Thank you for your message. Your blood pressure readings look good...",
   },
   {
     id: 2,
-    doctor: 'Dr. Michael Chen',
-    subject: 'Cardiology Consultation Results',
-    date: '2024-12-25',
-    status: 'replied',
-    preview: 'The ECG results came back normal. No immediate concerns...',
+    doctor: "Dr. Michael Chen",
+    subject: "Cardiology Consultation Results",
+    date: "2024-12-25",
+    status: "replied",
+    preview:
+      "The ECG results came back normal. No immediate concerns...",
   },
   {
     id: 3,
-    doctor: 'Dr. Sarah Johnson',
-    subject: 'Medication Refill Request',
-    date: '2024-12-20',
-    status: 'pending',
+    doctor: "Dr. Sarah Johnson",
+    subject: "Medication Refill Request",
+    date: "2024-12-20",
+    status: "pending",
     preview:
-      'Your prescription refill has been submitted to the pharmacy...',
+      "Your prescription refill has been submitted to the pharmacy...",
   },
 ];
 
 export default function ContactDoctorPage() {
-  const [selectedDoctor, setSelectedDoctor] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [urgency, setUrgency] = useState('routine');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ selectedDoctor, subject, message, urgency });
-    setSelectedDoctor('');
-    setSubject('');
-    setMessage('');
-    setUrgency('routine');
-  };
+  const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [urgency, setUrgency] = useState<"routine" | "urgent">("routine");
+  const [sending, setSending] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
 
   const currentDoctor =
-    doctors.find((d) => d.id.toString() === selectedDoctor) || doctors[0];
+    doctors.find((d) => d.id === selectedDoctor) || doctors[0];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInfo(null);
+
+    const user = getAuthenticatedUser();
+    if (!user) {
+      setInfo("Please log in as patient/family to send a request.");
+      return;
+    }
+
+    const patientUid = user.uid; // logged-in patient/family
+    const doctorUid = selectedDoctor || currentDoctor.id;
+
+    try {
+      setSending(true);
+
+      // doctorRequests/doctorUid/<autoId>
+      const reqRef = push(ref(db, `doctorRequests/${doctorUid}`));
+
+      await set(reqRef, {
+        patientUid,
+        patientName: user.username,
+        subject,
+        message,
+        urgency,
+        status: "pending",
+        createdAt: Date.now(),
+      }); // [web:38][web:89]
+
+      setInfo("Request sent to doctor successfully.");
+      setSelectedDoctor("");
+      setSubject("");
+      setMessage("");
+      setUrgency("routine");
+    } catch (err) {
+      console.error("Error sending doctor request:", err);
+      setInfo("Could not send request. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#C9E6E2] px-6 py-6 flex justify-center">
-      <div className="w-full max-w-6xl">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-slate-50">
+      <div className="border-b bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 lg:px-8">
           <div>
-            <p className="text-xs uppercase tracking-[0.15em] text-teal-900/70">
+            <h1 className="text-2xl font-semibold tracking-tight">
               Consult center
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold text-teal-950">
-              Contact your doctor
-            </h2>
-            <p className="mt-1 text-sm text-teal-900/80">
-              Communicate with your healthcare providers, ask questions, and request follow‑ups.
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Communicate with your healthcare providers, ask questions, and
+              request follow-ups.
             </p>
           </div>
-          <Badge className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm">
-            Secure messaging
-          </Badge>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-          {/* Left: form + recent messages */}
-          <div className="space-y-5 xl:col-span-2">
-            {/* Form card */}
-            <Card className="rounded-3xl border-0 bg-white/85 p-5 shadow-[0_14px_30px_rgba(15,118,110,0.18)] backdrop-blur">
-              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <MessageSquare className="text-teal-600" size={18} />
-                Send a message
-              </h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <Label className="text-xs text-gray-700">Doctor</Label>
-                    <Select
-                      value={selectedDoctor}
-                      onValueChange={(value) => setSelectedDoctor(value)}
-                    >
-                      <SelectTrigger className="mt-1 h-10 rounded-2xl border-0 bg-teal-50/80 text-sm text-gray-800 focus:ring-1 focus:ring-teal-400">
-                        <SelectValue placeholder="Select doctor" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border border-teal-100 bg-[#E6F5F2] shadow-lg">
-                        {doctors.map((doctor) => (
-                          <SelectItem
-                            key={doctor.id}
-                            value={doctor.id.toString()}
-                            className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
-                          >
-                            {doctor.name} – {doctor.specialty}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-gray-700">Urgency</Label>
-                    <Select value={urgency} onValueChange={(value) => setUrgency(value)}>
-                      <SelectTrigger className="mt-1 h-10 rounded-2xl border-0 bg-teal-50/80 text-sm text-gray-800 focus:ring-1 focus:ring-teal-400">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border border-teal-100 bg-[#E6F5F2] shadow-lg">
-                        <SelectItem
-                          value="routine"
-                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
-                        >
-                          Routine
-                        </SelectItem>
-                        <SelectItem
-                          value="soon"
-                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
-                        >
-                          Within 24 hours
-                        </SelectItem>
-                        <SelectItem
-                          value="urgent"
-                          className="cursor-pointer rounded-xl px-3 py-2 text-sm text-gray-800 data-highlighted:bg-teal-500 data-highlighted:text-white data-highlighted:outline-none"
-                        >
-                          Urgent (same day)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:grid-cols-[2fr_1.3fr] sm:px-6 lg:px-8">
+        {/* Left: form + recent messages */}
+        <div className="space-y-6">
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <form onSubmit={handleSubmit} className="space-y-4 p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label className="text-xs text-gray-700">Subject</Label>
-                  <Input
-                    className="mt-1 h-10 rounded-2xl border-0 bg-white/80 text-sm focus-visible:ring-1 focus-visible:ring-teal-400"
-                    placeholder="e.g., Follow-up on blood pressure readings"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
+                  <Label>Choose doctor</Label>
+                  <Select
+                    value={selectedDoctor || currentDoctor.id}
+                    onValueChange={(v) => setSelectedDoctor(v)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select doctor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors.map((doc) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          {doc.name} – {doc.specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div>
-                  <Label className="text-xs text-gray-700">Message</Label>
-                  <Textarea
-                    className="mt-1 min-h-35 rounded-2xl border-0 bg-white/80 text-sm focus-visible:ring-1 focus-visible:ring-teal-400"
-                    placeholder="Write your message with relevant details, symptoms, or questions..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-3 pt-2 md:flex-row md:items-center md:justify-between">
-                  <p className="max-w-sm text-[11px] text-gray-500">
-                    For medical emergencies, please call 911 or visit the nearest emergency room.
-                    For urgent medical questions, contact our 24/7 hotline.
-                  </p>
-                  <Button
-                    type="submit"
-                    className="flex h-10 items-center gap-2 rounded-full bg-teal-500 px-5 text-sm font-medium text-white shadow-sm hover:bg-teal-600"
+                  <Label>Urgency</Label>
+                  <Select
+                    value={urgency}
+                    onValueChange={(v: "routine" | "urgent") =>
+                      setUrgency(v)
+                    }
                   >
-                    <Send size={16} />
-                    Send message
-                  </Button>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select urgency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="routine">Routine</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </form>
-            </Card>
+              </div>
 
-            {/* Recent messages */}
-            <Card className="rounded-3xl border-0 bg-white/85 p-5 shadow-sm backdrop-blur">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <Mail className="text-teal-600" size={18} />
-                Recent messages
-              </h3>
-              <div className="space-y-3">
-                {recentMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className="flex flex-col gap-2 rounded-2xl bg-teal-50/70 p-3 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {msg.subject}
-                      </p>
-                      <p className="text-[11px] text-gray-500">
-                        {msg.doctor} • {msg.date}
-                      </p>
-                      <p className="mt-1 line-clamp-1 text-[11px] text-gray-600">
-                        {msg.preview}
-                      </p>
-                    </div>
+              <div>
+                <Label>Subject</Label>
+                <Input
+                  className="mt-1"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Reason for contacting the doctor"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label>Message</Label>
+                <Textarea
+                  className="mt-1"
+                  rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Describe your symptoms, questions, or concerns..."
+                  required
+                />
+              </div>
+
+              {info && (
+                <p className="text-sm text-slate-600">{info}</p>
+              )}
+
+              <Button
+                type="submit"
+                className="mt-2 inline-flex items-center gap-2"
+                disabled={sending}
+              >
+                <Send className="h-4 w-4" />
+                {sending ? "Sending..." : "Send request"}
+              </Button>
+            </form>
+          </Card>
+
+          {/* Recent messages UI तसाच ठेव */}
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b px-6 py-3">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-emerald-600" />
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Recent doctor messages
+                </h2>
+              </div>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {recentMessages.map((msg) => (
+                <div key={msg.id} className="px-6 py-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-slate-900">
+                      {msg.subject}
+                    </p>
                     <Badge
-                      className={`rounded-full px-3 py-1 text-[11px] font-medium ${
-                        msg.status === 'replied'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-yellow-50 text-yellow-700'
-                      }`}
+                      className={
+                        msg.status === "replied"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-amber-50 text-amber-700"
+                      }
                     >
-                      {msg.status === 'replied' ? 'Replied' : 'Pending'}
+                      {msg.status}
                     </Badge>
                   </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Right: doctor info + tips */}
-          <div className="space-y-5">
-            <Card className="rounded-3xl border-0 bg-teal-50/90 p-5 shadow-sm">
-              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <User className="text-teal-700" size={18} />
-                Doctor details
-              </h3>
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-500 text-2xl">
-                  {currentDoctor.image}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {currentDoctor.name}
+                  <p className="mt-1 text-xs text-slate-500">
+                    {msg.doctor} • {msg.date}
                   </p>
-                  <p className="text-[11px] text-gray-600">
+                  <p className="mt-1 text-xs text-slate-600">
+                    {msg.preview}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Right: current doctor info card */}
+        <div className="space-y-6">
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <div className="border-b px-6 py-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{currentDoctor.image}</span>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    {currentDoctor.name}
+                  </h2>
+                  <p className="text-xs text-slate-500">
                     {currentDoctor.specialty}
                   </p>
                 </div>
               </div>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <Phone className="mt-0.5 h-4 w-4 text-teal-700" />
-                  <div>
-                    <p className="font-semibold text-gray-800">Phone</p>
-                    <p className="text-gray-600">{currentDoctor.phone}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Mail className="mt-0.5 h-4 w-4 text-teal-700" />
-                  <div>
-                    <p className="font-semibold text-gray-800">Email</p>
-                    <p className="text-gray-600">{currentDoctor.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 text-teal-700" />
-                  <div>
-                    <p className="font-semibold text-gray-800">Location</p>
-                    <p className="text-gray-600">{currentDoctor.location}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Clock className="mt-0.5 h-4 w-4 text-teal-700" />
-                  <div>
-                    <p className="font-semibold text-gray-800">Availability</p>
-                    <p className="text-gray-600">{currentDoctor.availability}</p>
-                  </div>
+            </div>
+            <div className="space-y-4 px-6 py-4 text-sm">
+              <div className="flex items-center gap-3">
+                <Phone className="h-4 w-4 text-emerald-600" />
+                <div>
+                  <p className="text-xs text-slate-500">Phone</p>
+                  <p className="font-medium text-slate-900">
+                    {currentDoctor.phone}
+                  </p>
                 </div>
               </div>
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-emerald-600" />
+                <div>
+                  <p className="text-xs text-slate-500">Email</p>
+                  <p className="font-medium text-slate-900">
+                    {currentDoctor.email}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <MapPin className="h-4 w-4 text-emerald-600" />
+                <div>
+                  <p className="text-xs text-slate-500">Location</p>
+                  <p className="font-medium text-slate-900">
+                    {currentDoctor.location}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock className="h-4 w-4 text-emerald-600" />
+                <div>
+                  <p className="text-xs text-slate-500">
+                    Availability
+                  </p>
+                  <p className="font-medium text-slate-900">
+                    {currentDoctor.availability}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
 
-              <Button className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-teal-500 text-sm font-medium text-white hover:bg-teal-600">
-                <Phone size={16} />
-                Call clinic
-              </Button>
-            </Card>
-
-            <Card className="rounded-3xl border-0 bg-white/85 p-5 shadow-sm">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <Calendar className="text-teal-600" size={18} />
-                Appointment tips
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-[12px] text-gray-600">
-                <li>Prepare recent readings (BP, sugar, symptoms) before contacting.</li>
-                <li>Mention all current medications and allergies.</li>
-                <li>For urgent issues, call instead of sending a routine message.</li>
-              </ul>
-            </Card>
-          </div>
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center gap-3 px-6 py-4">
+              <User className="h-4 w-4 text-emerald-600" />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Your profile
+                </p>
+                <p className="text-sm text-slate-700">
+                  Keep your contact information up to date so doctors can
+                  reach you easily.
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

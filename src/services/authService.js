@@ -1,3 +1,4 @@
+// src/services/authService.js
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -75,9 +76,11 @@ export const register = async (userData) => {
     // If patient: patients/{uid}
     if (userData.role === "patient") {
       await set(ref(db, `patients/${uid}`), {
+        uid,
         name: userData.username,
         email,
         assignedDoctorId: null,
+        assignedDoctorName: null,
         createdAt: Date.now(),
       });
     }
@@ -142,6 +145,7 @@ export const login = async (username, password) => {
         error: "User profile not found in database",
       };
     }
+
     const dbUser = snap.val();
 
     await update(ref(db, `users/${uid}`), {
