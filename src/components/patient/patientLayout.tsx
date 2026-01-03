@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import {
   Heart,
   Activity,
-  AlertCircle,
   Calendar,
   Pill,
   TrendingUp,
@@ -11,7 +10,6 @@ import {
   BarChart3,
   Bell,
   MessageSquare,
-  Edit2,
   Plus,
   Trash2,
   LogOut,
@@ -151,7 +149,7 @@ export default function HealthTrackDashboard() {
     return () => unsub();
   }, []);
 
-  // Load assigned doctor name for current patient (optional)
+  // Load assigned doctor name for current patient
   useEffect(() => {
     if (!patientUid) return;
     const pRef = ref(db, `patients/${patientUid}`);
@@ -179,13 +177,11 @@ export default function HealthTrackDashboard() {
     try {
       setAssignMsg(null);
 
-      // update patients/{patientUid}
       await update(ref(db, `patients/${patientUid}`), {
         assignedDoctorId: doctor.uid,
         assignedDoctorName: doctor.displayName,
       });
 
-      // create doctorRequests/doctorUid/<autoId>
       const reqRef = push(ref(db, `doctorRequests/${doctor.uid}`));
       await set(reqRef, {
         patientUid,
@@ -226,11 +222,11 @@ export default function HealthTrackDashboard() {
         <nav className="flex items-center gap-2">
           {[
             { icon: Home, label: "Home", id: "home" as const },
+            { icon: Stethoscope, label: "Doctors", id: "doctors" as const }, // 2nd position
             { icon: Bell, label: "Alerts", id: "alerts" as const },
             { icon: Pill, label: "Medication", id: "medication" as const },
             { icon: BarChart3, label: "Reports", id: "reports" as const },
             { icon: MessageSquare, label: "Consult", id: "consult" as const },
-            { icon: Stethoscope, label: "Doctors", id: "doctors" as const },
           ].map((item) => (
             <button
               key={item.id}
@@ -329,7 +325,7 @@ export default function HealthTrackDashboard() {
 
             {/* Heart Rate */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex itemsकरने center justify-between">
                 <p className="text-xs text-slate-500">Heart rate</p>
                 <Heart className="text-rose-500" size={18} />
               </div>
@@ -357,7 +353,7 @@ export default function HealthTrackDashboard() {
 
             {/* Oxygen Level */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex itemsकरने center justify-between">
                 <p className="text-xs text-slate-500">Oxygen level</p>
                 <div className="text-emerald-500">
                   <svg
@@ -515,11 +511,11 @@ export default function HealthTrackDashboard() {
           {/* Appointments */}
           <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] border border-slate-100">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <h3 className="flex itemsकरने center gap-2 text-base font-semibold text-slate-900">
                 <Calendar size={18} className="text-emerald-500" />{" "}
                 Appointments
               </h3>
-              <button className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors">
+              <button className="flex itemsकरने center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 transition-colors">
                 <Plus size={14} /> Add
               </button>
             </div>
@@ -556,7 +552,7 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Doctors tab UI (left list + right info)
+  // Doctors tab UI
   const DoctorsTab = () => (
     <div className="bg-[#cfeee6] pb-10 pt-8">
       <div className="mx-auto max-w-6xl px-6">
