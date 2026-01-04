@@ -1,85 +1,121 @@
-// src/Dashboard.jsx
+
+
+
+
+
+// src/components/patient/Dashboard.jsx
 import { useEffect, useState } from "react";
 import { Heart, Activity } from "lucide-react";
+import { onValue, ref } from "firebase/database";
+import { db } from "../../lib/firebase";
+import { getAuthenticatedUser } from "../../services/authService";
+import { startLiveHealthUpdater } from "../../services/healthDataGenerator";
 
-function getRandomVitals() {
-  const heartRate = Math.floor(Math.random() * (100 - 60 + 1)) + 60;
-  const oxygenSaturation = Math.floor(Math.random() * (100 - 94 + 1)) + 94;
-  const respiratoryRate = Math.floor(Math.random() * (20 - 12 + 1)) + 12;
-  const temperature = Number((Math.random() * (99.5 - 97.5) + 97.5).toFixed(1));
-
-  return { heartRate, oxygenSaturation, respiratoryRate, temperature };
-}
+const initialVitals = {
+  overallHealthScore: 0,
+  condition: "Loading...",
+  heartRate: 0,
+  bloodPressure: "0/0",
+  oxygenLevel: 0,
+  timestamp: null,
+};
 
 export default function Dashboard() {
-  const [vitals, setVitals] = useState({
-    heartRate: 72,
-    oxygenSaturation: 98,
-    respiratoryRate: 16,
-    temperature: 98.6,
-  });
+  const [vitals, setVitals] = useState(initialVitals);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      const newVitals = getRandomVitals();
-      setVitals(newVitals);
-      console.log("Random vitals:", newVitals);
-    }, 2000);
+    const user = getAuthenticatedUser();
+    const uid = user?.uid;
 
-    return () => clearInterval(intervalId);
+    if (!uid) {
+      console.warn("No authenticated patient uid found for Dashboard");
+      return;
+    }
+
+    // Start background random updater for this patient
+    startLiveHealthUpdater(uid);
+
+    // Realtime listener for liveHealth node
+    const liveRef = ref(db, `patients/${uid}/liveHealth`);
+
+    const unsubscribe = onValue(liveRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setVitals(data);
+      }
+    });
+
+    // Cleanup listener (interval inside startLiveHealthUpdater will stop
+    // automatically when tab is closed; if you store the id you could clear it too)
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (
-    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-      {/* Heart Rate */}
-      <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Heart rate</p>
-          <Heart className="text-rose-500" size={18} />
+    <div className="grid gap-4 md:grid-cols-4">
+      {/* Overall Health Score */}
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-500">
+            Overall health score
+          </span>
+          <Activity className="h-5 w-5 text-green-500" />
         </div>
-        <p className="mb-2 text-4xl font-semibold text-slate-900">
+        <div className="mt-3 text-3xl font-semibold">
+          {vitals.overallHealthScore}
+        </div>
+        <p className="mt-1 text-xs text-gray-400">{vitals.condition}</p>
+      </div>
+
+      {/* Heart Rate */}
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-500">
+            Heart rate
+          </span>
+          <Heart className="h-5 w-5 text-red-500" />
+        </div>
+        <div className="mt-3 text-3xl font-semibold">
           {vitals.heartRate}
+          <span className="ml-1 text-base text-gray-500">bpm</span>
+        </div>
+        <p className="mt-1 text-xs text-gray-400">
+          Live simulated heart rate
         </p>
-        <p className="text-xs text-slate-500">Average today (bpm)</p>
+      </div>
+
+      {/* Blood Pressure */}
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-500">
+            Blood pressure
+          </span>
+        </div>
+        <div className="mt-3 text-3xl font-semibold">
+          {vitals.bloodPressure}
+        </div>
+        <p className="mt-1 text-xs text-gray-400">
+          Live simulated BP (mmHg)
+        </p>
       </div>
 
       {/* Oxygen Level */}
-      <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Oxygen level</p>
-          <Activity className="text-emerald-500" size={18} />
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-500">
+            Oxygen level
+          </span>
         </div>
-        <p className="mb-2 text-4xl font-semibold text-slate-900">
-          {vitals.oxygenSaturation}%
-        </p>
-        <p className="text-xs text-slate-500">Stable oxygen saturation</p>
-      </div>
-
-      {/* Respiratory Rate */}
-      <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Respiratory rate</p>
-          <Activity className="text-sky-500" size={18} />
+        <div className="mt-3 text-3xl font-semibold">
+          {vitals.oxygenLevel}
+          <span className="ml-1 text-base text-gray-500">%</span>
         </div>
-        <p className="mb-2 text-4xl font-semibold text-slate-900">
-          {vitals.respiratoryRate}
+        <p className="mt-1 text-xs text-gray-400">
+          Simulated SpO₂
         </p>
-        <p className="text-xs text-slate-500">
-          Average today (breaths/min)
-        </p>
-      </div>
-
-      {/* Temperature */}
-      <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Temperature</p>
-          <Activity className="text-sky-500" size={18} />
-        </div>
-        <p className="mb-2 text-4xl font-semibold text-slate-900">
-          {vitals.temperature}°
-        </p>
-        <p className="text-xs text-slate-500">Within normal range (°F)</p>
       </div>
     </div>
   );
 }
+

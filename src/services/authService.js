@@ -1,12 +1,16 @@
+
 // src/services/authService.js
+
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   signOut,
 } from "firebase/auth";
+
 import { auth, db } from "../lib/firebase";
-import { ref, set, get, update } from "firebase/database"; // [web:35]
+import { ref, set, get, update } from "firebase/database";
+
 import {
   saveUser,
   validateCredentials,
@@ -16,11 +20,9 @@ import {
   getUserByUsername,
 } from "../utils/storage";
 
+// (No need to start interval here; we will do that in Dashboard)
+// import { startLiveHealthUpdater } from "./healthDataGenerator";
 
-
-
-
-// Helper: map role -> displayName prefix (for doctors)
 const roleToDisplayName = (role, username) => {
   if (role === "doctor") {
     return `Dr. ${username}`;
@@ -28,9 +30,6 @@ const roleToDisplayName = (role, username) => {
   return username;
 };
 
-/**
- * Register a new user
- */
 export const register = async (userData) => {
   try {
     if (!userData.username || !userData.password || !userData.role) {
@@ -40,7 +39,6 @@ export const register = async (userData) => {
       };
     }
 
-    // Local storage duplicate check
     const existingUser = getUserByUsername(userData.username);
     if (existingUser) {
       return {
@@ -51,22 +49,17 @@ export const register = async (userData) => {
 
     const email = `${userData.username}@healthtrack.demo`;
 
-    // Firebase Auth: create user
     const cred = await createUserWithEmailAndPassword(
       auth,
       email,
       userData.password
     );
-    const uid = cred.user.uid;
 
+    const uid = cred.user.uid;
     const displayName = roleToDisplayName(userData.role, userData.username);
 
-    // Set displayName
-    await updateProfile(cred.user, {
-      displayName,
-    });
+    await updateProfile(cred.user, { displayName });
 
-    // Realtime Database: users/{uid}
     await set(ref(db, `users/${uid}`), {
       uid,
       username: userData.username,
@@ -74,9 +67,8 @@ export const register = async (userData) => {
       role: userData.role,
       displayName,
       createdAt: Date.now(),
-    }); // [web:74][web:87]
+    });
 
-    // If patient: patients/{uid}
     if (userData.role === "patient") {
       await set(ref(db, `patients/${uid}`), {
         uid,
@@ -85,7 +77,6 @@ export const register = async (userData) => {
         assignedDoctorId: null,
         assignedDoctorName: null,
         createdAt: Date.now(),
-        // NEW: default details block
         details: {
           firstName: "",
           lastName: "",
@@ -94,9 +85,11 @@ export const register = async (userData) => {
           primaryCondition: "stable",
         },
       });
+
+      // IMPORTANT: we DO NOT start the interval here.
+      // The dashboard will call startLiveHealthUpdater(uid) when the patient is viewing.
     }
 
-    // Local storage
     const result = saveUser({
       username: userData.username,
       password: userData.password,
@@ -130,9 +123,6 @@ export const register = async (userData) => {
   }
 };
 
-/**
- * Login user
- */
 export const login = async (username, password) => {
   try {
     if (!username || !password) {
@@ -144,12 +134,11 @@ export const login = async (username, password) => {
 
     const email = `${username}@healthtrack.demo`;
 
-    // Firebase Auth login
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
 
-    // Realtime DB: users/{uid}
     const snap = await get(ref(db, `users/${uid}`));
+
     if (!snap.exists()) {
       return {
         success: false,
@@ -163,8 +152,8 @@ export const login = async (username, password) => {
       lastLogin: Date.now(),
     });
 
-    // localStorage validation (existing logic)
     const result = validateCredentials(username, password);
+
     if (!result.success) {
       return {
         success: false,
@@ -212,19 +201,12 @@ export const logout = async () => {
   }
 };
 
-export const getAuthenticatedUser = () => {
-  return getCurrentUser();
-};
-
-export const isAuthenticated = () => {
-  return getCurrentUser() !== null;
-};
-
+export const getAuthenticatedUser = () => getCurrentUser();
+export const isAuthenticated = () => getCurrentUser() !== null;
 export const hasRole = (role) => {
   const user = getCurrentUser();
   return user && user.role === role;
 };
-
 export const hasAnyRole = (roles) => {
   const user = getCurrentUser();
   return user && roles.includes(user.role);
