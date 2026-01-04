@@ -629,17 +629,17 @@ export default function HealthTrackDashboard() {
       <div className="mx-auto max-w-6xl px-6 py-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Placeholder left card */}
-          <div className="rounded-3xl bg-white p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+          {/* <div className="rounded-3xl bg-white p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
             <h3 className="text-base font-semibold text-slate-900">
               Overview
             </h3>
             <p className="mt-2 text-sm text-slate-600">
               Summary widgets can be added here later.
             </p>
-          </div>
+          </div> */}
 
           {/* Appointments card */}
-          <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] border border-slate-100">
+          {/* <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] border border-slate-100">
             <div className="mb-6 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
                 <Calendar size={18} className="text-emerald-500" />{" "}
@@ -673,7 +673,7 @@ export default function HealthTrackDashboard() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
