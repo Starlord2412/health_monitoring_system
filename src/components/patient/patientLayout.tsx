@@ -286,7 +286,7 @@ export default function HealthTrackDashboard() {
             <h1 className="text-sm font-semibold text-slate-900">
               HealthTrack
             </h1>
-            <p className="text-xs text-slate-500">Family portal</p>
+            <p className="text-xs text-slate-500">Patient Portal</p>
           </div>
         </div>
 
@@ -341,10 +341,10 @@ export default function HealthTrackDashboard() {
       <div className="mx-auto flex max-w-6xl items-start justify-between px-6 pb-8 pt-10">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
-            Family dashboard
+            Patient dashboard
           </p>
           <h2 className="mt-2 text-3xl font-semibold text-slate-900">
-            Family health overview
+            Patient health overview
           </h2>
           <p className="mt-2 text-sm text-slate-700 max-w-xl">
             Monitor vitals, activity, and alerts for your loved one in real
