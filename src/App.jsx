@@ -22,17 +22,16 @@ import HealthTrackDashboard from "./components/patient/patientLayout";
 import FAQPage from "./components/FAQPage";
 import "./index.css";
 
-import { getAuthenticatedUser } from "./services/authService.js"; // ⬅️ ADD [web:96]
+import PatientDashboard from "./components/doctor/PatientDashboard";
+import { getAuthenticatedUser } from "./services/authService.js";
 
-// simple guard (optional but recommended)
+// simple guard
 function RequireAuth({ children, allowedRoles }) {
   const user = getAuthenticatedUser();
   if (!user) {
-    // not logged in → login page
     return <LoginPage />;
   }
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // wrong role
     return <Navigate to="/" replace />;
   }
   return children;
@@ -55,20 +54,31 @@ export default function App() {
         path="/doctor"
         element={
           <RequireAuth allowedRoles={["doctor"]}>
-            <DoctorLayout user={user} /> {/* ⬅️ user pass */}
+            <DoctorLayout user={user} />
           </RequireAuth>
         }
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DoctorDashboard />} />
-        {/* इथे doctorUid pass केला आहे */}
+
+        {/* patients list (cards) */}
         <Route
           path="patients"
           element={<PatientsList doctorUid={user?.uid || ""} />}
         />
+
+        {/* NEW: specific patient dashboard page */}
+        <Route
+          path="patients/:patientId"
+          element={<PatientDashboard />}
+        />
+
         <Route path="alerts" element={<DoctorAlerts />} />
         <Route path="reports" element={<DoctorReports />} />
-        <Route path="prescription" element={<DoctorPrescription doctorUid={user?.uid || ""} />} />
+        <Route
+          path="prescription"
+          element={<DoctorPrescription doctorUid={user?.uid || ""} />}
+        />
         <Route path="consult" element={<DoctorConsult />} />
       </Route>
 
