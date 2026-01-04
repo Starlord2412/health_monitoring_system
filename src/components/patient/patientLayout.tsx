@@ -438,13 +438,9 @@ export default function HealthTrackDashboard() {
 
           <Dashboard />
 
-
-
           <br></br>
           <br></br>
-          <BloodSugarGraph data={bloodSugarData} />
-
-
+          <BloodSugarGraph  />
 
 
           {/* Vitals Trend Chart */}

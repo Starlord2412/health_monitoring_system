@@ -1,5 +1,4 @@
 // src/services/authService.js
-
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -16,6 +15,10 @@ import {
   logout as logoutUser,
   getUserByUsername,
 } from "../utils/storage";
+
+
+
+
 
 // Helper: map role -> displayName prefix (for doctors)
 const roleToDisplayName = (role, username) => {
