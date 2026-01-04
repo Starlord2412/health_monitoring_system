@@ -20,7 +20,7 @@ import { db } from "../../lib/firebase";
 import { ref, onValue, push, set, update } from "firebase/database";
 import { getAuthenticatedUser } from "../../services/authService";
 import BloodSugarGraph from "./BloodSugarGraph"
-
+// import { startHealthDataGenerator } from "./services/healthDataGenerator";
 
 type Doctor = {
   uid: string;
@@ -161,6 +161,17 @@ export default function HealthTrackDashboard() {
 
   const authUser = getAuthenticatedUser();
   const patientUid = authUser?.uid;
+
+
+
+
+
+
+
+
+
+
+
 
   // Load doctors from /users where role == doctor
   useEffect(() => {
@@ -1128,3 +1139,5 @@ export default function HealthTrackDashboard() {
     </div>
   );
 }
+
+
