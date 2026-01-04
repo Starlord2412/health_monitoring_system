@@ -1,4 +1,4 @@
-// src/components/doctor/DoctorPatientDashboard.tsx
+// src/components/doctor/PatientDashboard.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../../lib/firebase";
@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Activity,
   Heart,
-  Thermometer,
   Droplets,
 } from "lucide-react";
 
@@ -17,7 +16,6 @@ type LiveHealth = {
   bloodPressure?: string;
   oxygenLevel?: number;
   respiratoryRate?: number;
-  temperature?: number;
 };
 
 type TimelineItem = {
@@ -194,8 +192,9 @@ const PatientDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Live vitals grid */}
+        {/* Live vitals grid (HR, BP, SpO2, RR) */}
         <div className="grid gap-4 md:grid-cols-4">
+          {/* Heart rate */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-slate-500">
@@ -214,6 +213,7 @@ const PatientDashboard: React.FC = () => {
             </p>
           </div>
 
+          {/* Blood pressure */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-slate-500">
@@ -229,6 +229,7 @@ const PatientDashboard: React.FC = () => {
             </p>
           </div>
 
+          {/* Oxygen saturation */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-slate-500">
@@ -247,21 +248,22 @@ const PatientDashboard: React.FC = () => {
             </p>
           </div>
 
+          {/* Respiratory rate */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-slate-500">
-                Temperature
+                Respiratory rate
               </p>
-              <Thermometer className="h-4 w-4 text-amber-500" />
+              <Activity className="h-4 w-4 text-emerald-500" />
             </div>
             <p className="mt-2 text-2xl font-semibold text-slate-900">
-              {liveHealth?.temperature ?? "—"}
+              {liveHealth?.respiratoryRate ?? "—"}
               <span className="ml-1 text-sm font-normal text-slate-400">
-                °C
+                /min
               </span>
             </p>
             <p className="mt-1 text-[11px] text-slate-500">
-              Normal range 36.1–37.2 °C.
+              Normal adult rate is about 12–20 breaths per minute.
             </p>
           </div>
         </div>
