@@ -43,6 +43,9 @@ type Patient = {
     heartRate?: number;
     bloodPressure?: string;
     oxygenLevel?: number;
+    respiratoryRate?: number;
+    condition?: string;
+    timestamp?: string;
   };
 };
 
@@ -84,8 +87,10 @@ export const PatientsList: React.FC<PatientsListProps> = ({ doctorUid }) => {
           id,
           name: item.name ?? "Unknown",
           age: item.age ?? 0,
-          condition: item.condition ?? "Not specified",
-          lastVisit: item.lastVisit ?? "Not available",
+          condition:
+            item.liveHealth?.condition ?? item.condition ?? "Not specified",
+          lastVisit:
+            item.lastVisit ?? item.liveHealth?.timestamp ?? "Not available",
           status: item.status ?? "stable",
           timeline: item.timeline ?? [],
           liveHealth: item.liveHealth ?? undefined,
@@ -245,6 +250,9 @@ export const PatientsList: React.FC<PatientsListProps> = ({ doctorUid }) => {
                             <span>
                               SpO₂: {patient.liveHealth.oxygenLevel ?? "—"}%
                             </span>
+                            <span>
+                              RR: {patient.liveHealth.respiratoryRate ?? "—"}/min
+                            </span>
                           </div>
                         </div>
                       )}
@@ -332,7 +340,7 @@ export const PatientsList: React.FC<PatientsListProps> = ({ doctorUid }) => {
                           </DialogContent>
                         </Dialog>
 
-                        {/* Dashboard button -> navigate */}
+                        {/* Dashboard button */}
                         <Button
                           size="sm"
                           className="flex-1 text-xs"

@@ -1,7 +1,3 @@
-
-
-
-
 // src/services/healthDataGenerator.js
 import { ref, set } from "firebase/database";
 import { db } from "../lib/firebase";
@@ -28,8 +24,7 @@ export const startLiveHealthUpdater = (patientId) => {
 
   setInterval(() => {
     const data = getRandomVitals();
-
     // Path: patients/{patientId}/liveHealth
     set(ref(db, `patients/${patientId}/liveHealth`), data);
-  }, 5000); // update every 5 seconds
+  }, 20000); // update every 5 seconds
 };

@@ -140,16 +140,14 @@ export default function HealthTrackDashboard() {
     if (!live) return 0;
 
     const hr = live.heartRate ?? 0;
-    const spo2 = live.oxygenLevel ?? 0; // match generator's key [file:49]
+    const spo2 = live.oxygenLevel ?? 0;
 
     let points = 0;
 
-    // Heart rate points (simplified NEWS-style) [web:55][web:61]
     if (hr < 40 || hr > 130) points += 3;
     else if ((hr >= 40 && hr < 50) || (hr > 110 && hr <= 130)) points += 2;
     else if ((hr >= 50 && hr < 60) || (hr > 100 && hr <= 110)) points += 1;
 
-    // SpO2 points
     if (spo2 < 92) points += 3;
     else if (spo2 >= 92 && spo2 < 94) points += 2;
     else if (spo2 >= 94 && spo2 < 96) points += 1;
@@ -161,14 +159,12 @@ export default function HealthTrackDashboard() {
   useEffect(() => {
     if (!patientUid) return;
 
-    const liveRef = ref(db, `patients/${patientUid}/liveHealth`); // same path as generator [file:49][web:29]
+    const liveRef = ref(db, `patients/${patientUid}/liveHealth`);
 
     const unsub = onValue(liveRef, (snap) => {
       if (!snap.exists()) return;
       const live = snap.val();
-      console.log("LIVE HEALTH FROM DB:", live); // debug
 
-      // If generator already writes overallHealthScore, use it [file:49]
       if (typeof live.overallHealthScore === "number") {
         setHealthScore(live.overallHealthScore);
       } else {
@@ -180,6 +176,7 @@ export default function HealthTrackDashboard() {
         heartRate: live.heartRate ?? prev.heartRate,
         bloodPressure: live.bloodPressure ?? prev.bloodPressure,
         oxygenSaturation: live.oxygenLevel ?? prev.oxygenSaturation,
+        respiratoryRate: live.respiratoryRate ?? prev.respiratoryRate,
       }));
     });
 
@@ -301,7 +298,7 @@ export default function HealthTrackDashboard() {
     }
   };
 
-  const handleSaveDetails = async () => {
+  const handleSaveDetails = async (details: PatientDetails) => {
     if (!patientUid) {
       setDetailsMsg("Please log in as patient to save details.");
       return;
@@ -310,16 +307,36 @@ export default function HealthTrackDashboard() {
       setSavingDetails(true);
       setDetailsMsg(null);
 
+      const ageNumber =
+        details.age !== null && !Number.isNaN(details.age)
+          ? details.age
+          : null;
+
       await update(ref(db, `patients/${patientUid}`), {
+        // flat fields for doctor cards / dashboard
+        name:
+          details.firstName || details.lastName
+            ? `${details.firstName} ${details.lastName}`.trim()
+            : patient.name,
+        age: ageNumber,
+        lastVisit: details.lastVisit || "",
+        condition:
+          details.primaryCondition === "stable"
+            ? "Stable"
+            : details.primaryCondition === "unstable"
+            ? "Unstable"
+            : "Not good",
+        // nested details node
         details: {
-          ...patientDetails,
-          age:
-            patientDetails.age !== null && !Number.isNaN(patientDetails.age)
-              ? patientDetails.age
-              : null,
+          firstName: details.firstName || "",
+          lastName: details.lastName || "",
+          age: ageNumber,
+          lastVisit: details.lastVisit || "",
+          primaryCondition: details.primaryCondition,
         },
       });
 
+      setPatientDetails(details);
       setDetailsMsg("Details saved successfully.");
       setShowDetailsModal(false);
     } catch (err) {
@@ -858,8 +875,7 @@ export default function HealthTrackDashboard() {
     };
 
     const onSaveClick = async () => {
-      setPatientDetails(localDetails);
-      await handleSaveDetails();
+      await handleSaveDetails(localDetails);
     };
 
     return (

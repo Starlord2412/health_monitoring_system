@@ -16,6 +16,8 @@ type LiveHealth = {
   bloodPressure?: string;
   oxygenLevel?: number;
   respiratoryRate?: number;
+  condition?: string;
+  timestamp?: string;
 };
 
 type TimelineItem = {
@@ -32,6 +34,7 @@ type Patient = {
   status?: string;
   lastVisit?: string;
   timeline?: TimelineItem[];
+  liveHealth?: LiveHealth;
 };
 
 const PatientDashboard: React.FC = () => {
@@ -47,7 +50,8 @@ const PatientDashboard: React.FC = () => {
     const liveRef = ref(db, `patients/${patientId}/liveHealth`);
 
     const unsubPatient = onValue(patientRef, (snap) => {
-      setPatient(snap.val());
+      const val = snap.val();
+      setPatient(val);
       setLoading(false);
     });
 
@@ -80,6 +84,11 @@ const PatientDashboard: React.FC = () => {
     scoreBadge = "bg-amber-100 text-amber-700";
   }
 
+  const effectiveCondition =
+    liveHealth?.condition || patient.condition || "Not documented";
+  const effectiveLastVisit =
+    patient.lastVisit || liveHealth?.timestamp || "No visit recorded";
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top bar */}
@@ -111,7 +120,7 @@ const PatientDashboard: React.FC = () => {
               </span>
             </p>
             <p className="text-slate-400">
-              Last visit: {patient.lastVisit || "No records"}
+              Last visit: {effectiveLastVisit}
             </p>
           </div>
         </div>
@@ -128,14 +137,13 @@ const PatientDashboard: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-base font-semibold text-slate-900">
-                  {patient.name}
+                  {patient.name || "Unnamed patient"}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Age {patient.age ?? "—"} •{" "}
-                  {patient.condition || "Condition not specified"}
+                  Age {patient.age ?? "—"} • {effectiveCondition}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  ID: {patientId}
+                  Patient ID: {patientId}
                 </p>
               </div>
             </div>
@@ -145,7 +153,7 @@ const PatientDashboard: React.FC = () => {
                   Primary condition
                 </p>
                 <p className="mt-0.5 text-slate-800">
-                  {patient.condition || "Not documented"}
+                  {effectiveCondition}
                 </p>
               </div>
               <div>
@@ -161,7 +169,7 @@ const PatientDashboard: React.FC = () => {
                   Last visit
                 </p>
                 <p className="mt-0.5 text-slate-800">
-                  {patient.lastVisit || "No visit recorded"}
+                  {effectiveLastVisit}
                 </p>
               </div>
             </div>
