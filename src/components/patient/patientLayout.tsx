@@ -21,6 +21,11 @@ import { ref, onValue, push, set, update } from "firebase/database";
 import { getAuthenticatedUser } from "../../services/authService";
 import BloodSugarGraph from "./BloodSugarGraph"
 // import { startHealthDataGenerator } from "./services/healthDataGenerator";
+import Dashboard from "./Dashboard";
+
+
+
+
 
 type Doctor = {
   uid: string;
@@ -430,109 +435,9 @@ export default function HealthTrackDashboard() {
     return (
       <div className="bg-[#cfeee6] pb-10">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
-            {/* Overall Health Score */}
-            {/* <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">
-                  Overall health score
-                </p>
-                <TrendingUp className="text-emerald-500" size={18} />
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-emerald-600">
-                {healthScore}
-              </p>
-              <p className="text-xs text-slate-500">Good, stable condition</p>
-            </div> */}
 
-            {/* Heart Rate */}
-            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Heart rate</p>
-                <Heart className="text-rose-500" size={18} />
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-slate-900">
-                {vitals.heartRate}
-              </p>
-              <p className="text-xs text-slate-500">
-                Average today (bpm)
-              </p>
-            </div>
+          <Dashboard />
 
-
-            {/* Oxygen Level */}
-            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Oxygen level</p>
-                <div className="text-emerald-500">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M3 12h4l3 9 4-18 3 9h4" />
-                  </svg>
-                </div>
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-slate-900">
-                {vitals.oxygenSaturation}%
-              </p>
-              <p className="text-xs text-slate-500">
-                Stable oxygen saturation
-              </p>
-            </div>
-
-
-            {/* respiratoryRate */}
-            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Respiratory rate</p>
-                <Activity className="text-sky-500" size={18} />
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-slate-900">
-                {vitals.respiratoryRate}
-              </p>
-              <p className="text-xs text-slate-500">
-                Average today (breaths/min)
-              </p>
-            </div>
-
-            {/* Temperature */}
-            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Temperature</p>
-                <Activity className="text-sky-500" size={18} />
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-slate-900">
-                {vitals.temperature}°
-              </p>
-              <p className="text-xs text-slate-500">
-                Within normal range (°F)
-              </p>
-            </div>
-
-
-            {/* Blood Pressure */}
-            {/* <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Blood pressure</p>
-                <Activity className="text-sky-500" size={18} />
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-slate-900">
-                {vitals.bloodPressure}
-              </p>
-              <p className="text-xs text-slate-500">
-                Within normal range
-              </p>
-            </div> */}
-
-
-
-
-          </div>
 
 
           <br></br>
