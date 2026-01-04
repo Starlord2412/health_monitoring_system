@@ -116,8 +116,8 @@ export default function HealthTrackDashboard() {
     },
   ]);
 
-  const healthScore = 85;
-  const alertsCount = 3;
+  const healthScore = 0;
+  const alertsCount = 0;
 
   // Vitals trend data
   const vitalsTrend = [

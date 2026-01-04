@@ -13,6 +13,7 @@ export function getRandomVitals() {
 
   return {
     overallHealthScore: Math.floor(80 + Math.random() * 10),
+    respiratoryRate: Math.floor(12 + Math.random() * 4),
     condition: "Good, stable condition",
     heartRate: Math.floor(65 + Math.random() * 10),
     bloodPressure: `${systolic}/${diastolic}`,

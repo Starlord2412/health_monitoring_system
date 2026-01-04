@@ -13,6 +13,7 @@ import { startLiveHealthUpdater } from "../../services/healthDataGenerator";
 
 const initialVitals = {
   overallHealthScore: 0,
+  respiratoryRate: 0,
   condition: "Loading...",
   heartRate: 0,
   bloodPressure: "0/0",
@@ -55,21 +56,21 @@ export default function Dashboard() {
   return (
     <div className="grid gap-4 md:grid-cols-4">
       {/* Overall Health Score */}
-      <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="rounded-xl  bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-500">
-            Overall health score
+         Respiratory Rate 
           </span>
           <Activity className="h-5 w-5 text-green-500" />
         </div>
         <div className="mt-3 text-3xl font-semibold">
-          {vitals.overallHealthScore}
+          {vitals.respiratoryRate} breaths/min
         </div>
         <p className="mt-1 text-xs text-gray-400">{vitals.condition}</p>
       </div>
 
       {/* Heart Rate */}
-      <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="rounded-xl  bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-500">
             Heart rate
@@ -86,7 +87,7 @@ export default function Dashboard() {
       </div>
 
       {/* Blood Pressure */}
-      <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="rounded-xl  bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-500">
             Blood pressure
@@ -101,7 +102,7 @@ export default function Dashboard() {
       </div>
 
       {/* Oxygen Level */}
-      <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="rounded-xl  bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-500">
             Oxygen level
