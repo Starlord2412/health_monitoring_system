@@ -19,13 +19,8 @@ import {
 import { db } from "../../lib/firebase";
 import { ref, onValue, push, set, update } from "firebase/database";
 import { getAuthenticatedUser } from "../../services/authService";
-import BloodSugarGraph from "./BloodSugarGraph"
-// import { startHealthDataGenerator } from "./services/healthDataGenerator";
+import BloodSugarGraph from "./BloodSugarGraph";
 import Dashboard from "./Dashboard";
-
-
-
-
 
 type Doctor = {
   uid: string;
@@ -48,11 +43,8 @@ export default function HealthTrackDashboard() {
   >("home");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMedicationModal, setShowMedicationModal] = useState(false);
-
-  // NEW: patient details modal
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Patient Data State
   const [patient, setPatient] = useState({
     name: "John Doe",
     role: "Caregiver view",
@@ -66,9 +58,8 @@ export default function HealthTrackDashboard() {
     temperature: 98.6,
     weight: 180,
     oxygenSaturation: 98,
-    respiratoryRate: 16, // breaths per minute
+    respiratoryRate: 16,
   });
-
 
   const bloodSugarData = [
     { time: "10:00", bloodSugar: 95 },
@@ -77,8 +68,6 @@ export default function HealthTrackDashboard() {
     { time: "10:15", bloodSugar: 145 },
     { time: "10:20", bloodSugar: 180 },
   ];
-
-
 
   const [editVitals, setEditVitals] = useState({ ...vitals });
 
@@ -116,10 +105,9 @@ export default function HealthTrackDashboard() {
     },
   ]);
 
-  const healthScore = 0;
+  const [healthScore, setHealthScore] = useState(0);
   const alertsCount = 0;
 
-  // Vitals trend data
   const vitalsTrend = [
     { label: "Mon", value: 118 },
     { label: "Tue", value: 122 },
@@ -129,7 +117,6 @@ export default function HealthTrackDashboard() {
     { label: "Sat", value: 120 },
   ];
 
-  // NEW: patientDetails state
   const [patientDetails, setPatientDetails] = useState<PatientDetails>({
     firstName: "",
     lastName: "",
@@ -137,30 +124,9 @@ export default function HealthTrackDashboard() {
     lastVisit: "",
     primaryCondition: "stable",
   });
-
   const [savingDetails, setSavingDetails] = useState(false);
   const [detailsMsg, setDetailsMsg] = useState<string | null>(null);
 
-  // Handlers
-  const handleSaveVitals = () => {
-    setVitals(editVitals);
-    setShowEditModal(false);
-  };
-
-  const handleAddMedication = (med: any) => {
-    setMedications([...medications, { ...med, id: Date.now() }]);
-    setShowMedicationModal(false);
-  };
-
-  const handleDeleteMedication = (id: number) => {
-    setMedications(medications.filter((m) => m.id !== id));
-  };
-
-  const handleDeleteAppointment = (id: number) => {
-    setAppointments(appointments.filter((a) => a.id !== id));
-  };
-
-  // doctors + assigned doctor state
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctorUid, setSelectedDoctorUid] = useState<string>("");
   const [assignMsg, setAssignMsg] = useState<string | null>(null);
@@ -168,18 +134,60 @@ export default function HealthTrackDashboard() {
   const authUser = getAuthenticatedUser();
   const patientUid = authUser?.uid;
 
+  // ---------------- HEALTH SCORE FROM liveHealth ----------------
 
+  const calculateHealthScore = (live: any) => {
+    if (!live) return 0;
 
+    const hr = live.heartRate ?? 0;
+    const spo2 = live.oxygenLevel ?? 0; // match generator's key [file:49]
 
+    let points = 0;
 
+    // Heart rate points (simplified NEWS-style) [web:55][web:61]
+    if (hr < 40 || hr > 130) points += 3;
+    else if ((hr >= 40 && hr < 50) || (hr > 110 && hr <= 130)) points += 2;
+    else if ((hr >= 50 && hr < 60) || (hr > 100 && hr <= 110)) points += 1;
 
+    // SpO2 points
+    if (spo2 < 92) points += 3;
+    else if (spo2 >= 92 && spo2 < 94) points += 2;
+    else if (spo2 >= 94 && spo2 < 96) points += 1;
 
+    const rawScore = 100 - points * 5;
+    return Math.max(0, Math.min(100, rawScore));
+  };
 
+  useEffect(() => {
+    if (!patientUid) return;
 
+    const liveRef = ref(db, `patients/${patientUid}/liveHealth`); // same path as generator [file:49][web:29]
 
+    const unsub = onValue(liveRef, (snap) => {
+      if (!snap.exists()) return;
+      const live = snap.val();
+      console.log("LIVE HEALTH FROM DB:", live); // debug
 
+      // If generator already writes overallHealthScore, use it [file:49]
+      if (typeof live.overallHealthScore === "number") {
+        setHealthScore(live.overallHealthScore);
+      } else {
+        setHealthScore(calculateHealthScore(live));
+      }
 
-  // Load doctors from /users where role == doctor
+      setVitals((prev) => ({
+        ...prev,
+        heartRate: live.heartRate ?? prev.heartRate,
+        bloodPressure: live.bloodPressure ?? prev.bloodPressure,
+        oxygenSaturation: live.oxygenLevel ?? prev.oxygenSaturation,
+      }));
+    });
+
+    return () => unsub();
+  }, [patientUid]);
+
+  // ---------------- EXISTING DATA LOAD ----------------
+
   useEffect(() => {
     const usersRef = ref(db, "users");
     const unsub = onValue(usersRef, (snap) => {
@@ -202,7 +210,6 @@ export default function HealthTrackDashboard() {
     return () => unsub();
   }, []);
 
-  // Load assigned doctor + patient basic info + patient details
   useEffect(() => {
     if (!patientUid) return;
     const pRef = ref(db, `patients/${patientUid}`);
@@ -226,12 +233,12 @@ export default function HealthTrackDashboard() {
             typeof p.details.age === "number"
               ? p.details.age
               : p.details.age
-                ? Number(p.details.age)
-                : null,
+              ? Number(p.details.age)
+              : null,
           lastVisit: p.details.lastVisit || "",
           primaryCondition:
             p.details.primaryCondition === "unstable" ||
-              p.details.primaryCondition === "not_good"
+            p.details.primaryCondition === "not_good"
               ? p.details.primaryCondition
               : "stable",
         });
@@ -239,6 +246,26 @@ export default function HealthTrackDashboard() {
     });
     return () => unsub();
   }, [patientUid]);
+
+  // ---------------- HANDLERS ----------------
+
+  const handleSaveVitals = () => {
+    setVitals(editVitals);
+    setShowEditModal(false);
+  };
+
+  const handleAddMedication = (med: any) => {
+    setMedications([...medications, { ...med, id: Date.now() }]);
+    setShowMedicationModal(false);
+  };
+
+  const handleDeleteMedication = (id: number) => {
+    setMedications(medications.filter((m) => m.id !== id));
+  };
+
+  const handleDeleteAppointment = (id: number) => {
+    setAppointments(appointments.filter((a) => a.id !== id));
+  };
 
   const handleChooseDoctor = async (doctor: Doctor) => {
     if (!patientUid) {
@@ -274,7 +301,6 @@ export default function HealthTrackDashboard() {
     }
   };
 
-  // NEW: save patient details to DB
   const handleSaveDetails = async () => {
     if (!patientUid) {
       setDetailsMsg("Please log in as patient to save details.");
@@ -304,7 +330,8 @@ export default function HealthTrackDashboard() {
     }
   };
 
-  // Header Component (top bar with tabs)
+  // ---------------- UI COMPONENTS ----------------
+
   const Header = () => (
     <div className="border-b border-emerald-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -323,7 +350,7 @@ export default function HealthTrackDashboard() {
         <nav className="flex items-center gap-2">
           {[
             { icon: Home, label: "Home", id: "home" as const },
-            { icon: Stethoscope, label: "Doctors", id: "doctors" as const }, // 2nd position
+            { icon: Stethoscope, label: "Doctors", id: "doctors" as const },
             { icon: Bell, label: "Alerts", id: "alerts" as const },
             { icon: Pill, label: "Medication", id: "medication" as const },
             { icon: BarChart3, label: "Reports", id: "reports" as const },
@@ -332,10 +359,11 @@ export default function HealthTrackDashboard() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all ${activeTab === item.id
-                ? "bg-emerald-100 text-emerald-700"
-                : "text-slate-600 hover:bg-slate-100"
-                }`}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all ${
+                activeTab === item.id
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
             >
               <item.icon size={16} />
               <span>{item.label}</span>
@@ -364,7 +392,6 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Hero Section (with Details button before Health score)
   const HeroSection = () => (
     <div className="bg-[#cfeee6]">
       <div className="mx-auto flex max-w-6xl items-start justify-between px-6 pb-8 pt-10">
@@ -380,7 +407,6 @@ export default function HealthTrackDashboard() {
             time.
           </p>
 
-          {/* NEW: patient details summary + button */}
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               onClick={() => setShowDetailsModal(true)}
@@ -393,16 +419,15 @@ export default function HealthTrackDashboard() {
               {patientDetails.firstName || patientDetails.lastName
                 ? `${patientDetails.firstName} ${patientDetails.lastName}`.trim()
                 : "No personal details added yet"}
-              {patientDetails.age
-                ? ` • Age ${patientDetails.age}`
-                : ""}
+              {patientDetails.age ? ` • Age ${patientDetails.age}` : ""}
               {patientDetails.primaryCondition
-                ? ` • Condition: ${patientDetails.primaryCondition === "stable"
-                  ? "Stable"
-                  : patientDetails.primaryCondition === "unstable"
-                    ? "Unstable"
-                    : "Not good"
-                }`
+                ? ` • Condition: ${
+                    patientDetails.primaryCondition === "stable"
+                      ? "Stable"
+                      : patientDetails.primaryCondition === "unstable"
+                      ? "Unstable"
+                      : "Not good"
+                  }`
                 : ""}
             </p>
           </div>
@@ -426,7 +451,6 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Vitals Cards + Trend (unchanged)
   const VitalsCards = () => {
     const maxValue = Math.max(...vitalsTrend.map((v) => v.value));
     const minValue = Math.min(...vitalsTrend.map((v) => v.value));
@@ -435,15 +459,12 @@ export default function HealthTrackDashboard() {
     return (
       <div className="bg-[#cfeee6] pb-10">
         <div className="mx-auto max-w-6xl px-6">
-
           <Dashboard />
 
-          <br></br>
-          <br></br>
-          <BloodSugarGraph  />
+          <br />
+          <br />
+          <BloodSugarGraph />
 
-
-          {/* Vitals Trend Chart */}
           <div className="mt-6 rounded-3xl bg-white p-8 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
             <div className="mb-8 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -524,63 +545,14 @@ export default function HealthTrackDashboard() {
     );
   };
 
-  // Home content: Appointments only
   const HomeContentSection = () => (
     <div className="bg-white">
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Placeholder left card */}
-          {/* <div className="rounded-3xl bg-white p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-            <h3 className="text-base font-semibold text-slate-900">
-              Overview
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Summary widgets can be added here later.
-            </p>
-          </div> */}
-
-          {/* Appointments card */}
-          {/* <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] border border-slate-100">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                <Calendar size={18} className="text-emerald-500" />{" "}
-                Appointments
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              {appointments.map((apt) => (
-                <div
-                  key={apt.id}
-                  className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 hover:bg-slate-100 transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {apt.type}
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      {apt.date} at {apt.time}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {apt.doctor}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteAppointment(apt.id)}
-                    className="rounded-lg bg-rose-50 p-2 text-rose-600 hover:bg-rose-100 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div> */}
-        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2" />
       </div>
     </div>
   );
 
-  // Medication tab (full medications list)
   const MedicationTab = () => (
     <div className="bg-[#cfeee6] pb-10 pt-8">
       <div className="mx-auto max-w-6xl px-6">
@@ -628,12 +600,10 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Doctors tab UI (with appointments on right)
   const DoctorsTab = () => (
     <div className="bg-[#cfeee6] pb-10 pt-8">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid gap-6 md:grid-cols-[2fr,1.5fr]">
-          {/* left: doctors list */}
           <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
@@ -648,9 +618,7 @@ export default function HealthTrackDashboard() {
                 </div>
               </div>
               {assignMsg && (
-                <p className="mb-3 text-xs text-emerald-700">
-                  {assignMsg}
-                </p>
+                <p className="mb-3 text-xs text-emerald-700">{assignMsg}</p>
               )}
               {doctors.length === 0 ? (
                 <p className="py-4 text-sm text-slate-500">
@@ -677,10 +645,11 @@ export default function HealthTrackDashboard() {
                         </div>
                       </div>
                       <button
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${selectedDoctorUid === doc.uid
-                          ? "bg-slate-200 text-slate-700"
-                          : "bg-emerald-600 text-white"
-                          }`}
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          selectedDoctorUid === doc.uid
+                            ? "bg-slate-200 text-slate-700"
+                            : "bg-emerald-600 text-white"
+                        }`}
                         onClick={() => handleChooseDoctor(doc)}
                         disabled={selectedDoctorUid === doc.uid}
                       >
@@ -695,7 +664,6 @@ export default function HealthTrackDashboard() {
             </div>
           </div>
 
-          {/* right: current doctor + appointments */}
           <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <h2 className="mb-2 text-sm font-semibold text-slate-900">
@@ -756,7 +724,6 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Edit Vitals Modal
   const EditVitalsModal = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
@@ -808,7 +775,6 @@ export default function HealthTrackDashboard() {
     </div>
   );
 
-  // Add Medication Modal
   const AddMedicationModal = () => {
     const [newMed, setNewMed] = useState({
       name: "",
@@ -876,7 +842,6 @@ export default function HealthTrackDashboard() {
     );
   };
 
-  // NEW: Patient Details Modal
   const PatientDetailsModal = () => {
     const [localDetails, setLocalDetails] = useState<PatientDetails>({
       ...patientDetails,
@@ -938,9 +903,7 @@ export default function HealthTrackDashboard() {
               <input
                 type="number"
                 min={0}
-                value={
-                  localDetails.age !== null ? localDetails.age : ""
-                }
+                value={localDetails.age !== null ? localDetails.age : ""}
                 onChange={(e) => updateField("age", e.target.value)}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
               />
@@ -969,8 +932,7 @@ export default function HealthTrackDashboard() {
                 onChange={(e) =>
                   updateField(
                     "primaryCondition",
-                    e.target
-                      .value as PatientDetails["primaryCondition"]
+                    e.target.value as PatientDetails["primaryCondition"]
                   )
                 }
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 bg-white"
@@ -1005,6 +967,8 @@ export default function HealthTrackDashboard() {
       </div>
     );
   };
+
+  // ---------------- MAIN RENDER ----------------
 
   return (
     <div className="min-h-screen bg-[#cfeee6]">
@@ -1073,5 +1037,3 @@ export default function HealthTrackDashboard() {
     </div>
   );
 }
-
-
