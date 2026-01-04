@@ -68,7 +68,7 @@ export default function App() {
         />
         <Route path="alerts" element={<DoctorAlerts />} />
         <Route path="reports" element={<DoctorReports />} />
-        <Route path="prescription" element={<DoctorPrescription />} />
+        <Route path="prescription" element={<DoctorPrescription doctorUid={user?.uid || ""} />} />
         <Route path="consult" element={<DoctorConsult />} />
       </Route>
 
