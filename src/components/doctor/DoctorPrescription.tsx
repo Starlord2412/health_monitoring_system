@@ -21,19 +21,8 @@ import {
 import { Plus, Edit, Pill } from "lucide-react";
 
 // Firebase imports
-import {
-  getDatabase,
-  ref,
-  onValue,
-  push,
-  set,
-  update,
-  query,
-  orderByChild,
-  equalTo,
-  off,
-} from "firebase/database";
-import { app, db } from "../../lib/firebase";
+import { getDatabase, ref, onValue, push, set, update } from "firebase/database";
+import { app } from "../../lib/firebase";
 
 type Prescription = {
   id: number;
@@ -48,15 +37,6 @@ type Prescription = {
   dateIssued: string; // "YYYY-MM-DD"
   expiresAt?: number; // timestamp in ms
 };
-
-type Patient = {
-  id: string;
-  name: string;
-};
-
-interface DoctorPrescriptionProps {
-  doctorUid: string;
-}
 
 const parseDurationDays = (duration: string): number => {
   const match = duration.match(/(\d+)\s*day/i);
@@ -78,26 +58,12 @@ const isExpired = (p: Prescription): boolean => {
   return today >= expiry;
 };
 
-const computeExpiresAt = (dateIssued: string, duration: string): number | null => {
-  const match = duration.match(/(\d+)/);
-  const days = match ? Number(match[1]) : 0;
-  if (!days) return null;
-
-  const start = new Date(dateIssued);
-  if (isNaN(start.getTime())) return null;
-
-  const expires = new Date(start);
-  expires.setDate(expires.getDate() + days);
-  return expires.getTime();
-};
-
-export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
+export function DoctorPrescription() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [newPrescription, setNewPrescription] = useState({
     patient: "",
-    patientId: "",
     medication: "",
     dosage: "",
     frequency: "",
@@ -107,15 +73,33 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingPrescription, setEditingPrescription] =
-    useState<Prescription | null>(null);
+  const [editingPrescription, setEditingPrescription] = useState<
+    Prescription | null
+  >(null);
 
-  const [patients, setPatients] = useState<Patient[]>([]);
+  // ---- helpers for duration / expiry ----
+
+  const parseDurationDays = (duration: string): number => {
+    const match = duration.match(/(\d+)/);
+    return match ? Number(match[1]) : 0;
+  };
+
+  const computeExpiresAt = (dateIssued: string, duration: string): number | null => {
+    const days = parseDurationDays(duration);
+    if (!days) return null;
+
+    const start = new Date(dateIssued);
+    if (isNaN(start.getTime())) return null;
+
+    const expires = new Date(start);
+    expires.setDate(expires.getDate() + days);
+    return expires.getTime();
+  };
 
   // ---- Read prescriptions from Realtime DB ----
   useEffect(() => {
-    const dbLocal = getDatabase(app);
-    const prescriptionsRef = ref(dbLocal, "prescriptions");
+    const db = getDatabase(app);
+    const prescriptionsRef = ref(db, "prescriptions");
 
     const unsubscribe = onValue(prescriptionsRef, (snapshot) => {
       const data = snapshot.val();
@@ -133,56 +117,21 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
       );
       setPrescriptions(list);
       setLoading(false);
+
+      // if (expiredKeys.length > 0) {
+      //   expiredKeys.forEach((k) => {
+      //     const itemRef = ref(db, `prescriptions/${k}`);
+      //     set(itemRef, null); // delete expired from DB
+      //   });
+      // }
     });
 
     return () => unsubscribe();
   }, []);
 
-  // ---- Load only assigned patients (same logic as PatientsList) ----
-  useEffect(() => {
-    if (!doctorUid) {
-      setPatients([]);
-      return;
-    }
-
-    const patientsRef = ref(db, "patients");
-    const q = query(
-      patientsRef,
-      orderByChild("assignedDoctorId"),
-      equalTo(doctorUid)
-    ); // same filter as PatientsList [file:39][web:63]
-
-    const handle = onValue(
-      q,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setPatients([]);
-          return;
-        }
-        const data = snapshot.val() as Record<string, any>;
-        const list: Patient[] = Object.entries(data).map(
-          ([id, item]) => ({
-            id,
-            name: item.name ?? "Unknown",
-          })
-        );
-        setPatients(list);
-      },
-      (err) => {
-        console.error("DoctorPrescription patients error:", err);
-        setPatients([]);
-      }
-    );
-
-    return () => {
-      off(q, "value", handle);
-    };
-  }, [doctorUid]);
-
   const resetForm = () => {
     setNewPrescription({
       patient: "",
-      patientId: "",
       medication: "",
       dosage: "",
       frequency: "",
@@ -196,7 +145,6 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
   // ---- Add or update prescription ----
   const handleSavePrescription = async () => {
     if (
-      !newPrescription.patientId ||
       !newPrescription.patient ||
       !newPrescription.medication ||
       !newPrescription.dosage
@@ -204,12 +152,17 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
       return;
     }
 
-    const dbLocal = getDatabase(app);
-    const rootRef = ref(dbLocal);
+    const db = getDatabase(app);
+    const prescriptionsRef = ref(db, "prescriptions");
     const todayStr = new Date().toISOString().split("T")[0];
 
     if (isEditing && editingPrescription?.firebaseKey) {
       // UPDATE existing
+      const itemRef = ref(
+        db,
+        `prescriptions/${editingPrescription.firebaseKey}`
+      );
+
       const dateIssued = editingPrescription.dateIssued || todayStr;
       const durationToUse =
         newPrescription.duration || editingPrescription.duration;
@@ -221,24 +174,13 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
         ...editingPrescription,
         ...newPrescription,
         dateIssued,
-        expiresAt: expiresAt ?? undefined,
+        expiresAt,
       };
 
-      const key = editingPrescription.firebaseKey;
-      const patientId = updated.patientId!;
-
-      const updates: any = {};
-      // global list
-      updates[`prescriptions/${key}`] = updated;
-      // patient medication section
-      updates[`patients/${patientId}/medications/${key}`] = updated; // <- for Medication page [web:30]
-
-      await update(rootRef, updates);
+      await update(itemRef, updated);
     } else {
       // CREATE new
-      const prescriptionsRef = ref(dbLocal, "prescriptions");
       const newRef = push(prescriptionsRef);
-      const key = newRef.key as string;
 
       const dateIssued = todayStr;
       const expiresAt =
@@ -251,13 +193,7 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
         expiresAt,
       };
 
-      const patientId = prescription.patientId!;
-
-      const updates: any = {};
-      updates[`prescriptions/${key}`] = prescription;
-      updates[`patients/${patientId}/medications/${key}`] = prescription;
-
-      await update(rootRef, updates);
+      await set(newRef, prescription);
     }
 
     resetForm();
@@ -270,7 +206,6 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
     setEditingPrescription(prescription);
     setNewPrescription({
       patient: prescription.patient,
-      patientId: prescription.patientId ?? "",
       medication: prescription.medication,
       dosage: prescription.dosage,
       frequency: prescription.frequency,
@@ -356,27 +291,28 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
                       Patient
                     </Label>
                     <Select
-                      value={newPrescription.patientId}
+                      value={newPrescription.patient}
                       onValueChange={(value) =>
-                        setNewPrescription((prev) => {
-                          const p = patients.find((x) => x.id === value);
-                          return {
-                            ...prev,
-                            patientId: value,
-                            patient: p?.name ?? "",
-                          };
-                        })
+                        setNewPrescription((prev) => ({
+                          ...prev,
+                          patient: value,
+                        }))
                       }
                     >
                       <SelectTrigger className="mt-1 h-9 text-sm bg-white border border-slate-300 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80">
                         <SelectValue placeholder="Select patient" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-slate-200 text-slate-900">
-                        {patients.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Sarah Johnson">
+                          Sarah Johnson
+                        </SelectItem>
+                        <SelectItem value="Michael Chen">
+                          Michael Chen
+                        </SelectItem>
+                        <SelectItem value="Emily Davis">Emily Davis</SelectItem>
+                        <SelectItem value="Robert Wilson">
+                          Robert Wilson
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -446,8 +382,12 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-slate-200 text-slate-900">
-                        <SelectItem value="Once daily">Once daily</SelectItem>
-                        <SelectItem value="Twice daily">Twice daily</SelectItem>
+                        <SelectItem value="Once daily">
+                          Once daily
+                        </SelectItem>
+                        <SelectItem value="Twice daily">
+                          Twice daily
+                        </SelectItem>
                         <SelectItem value="Three times daily">
                           Three times daily
                         </SelectItem>
@@ -520,15 +460,15 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-lg">Active prescriptions</CardTitle>
+                <CardTitle className="text-lg">
+                  Active prescriptions
+                </CardTitle>
                 <p className="mt-1 text-xs text-slate-500">
                   Current medication plans for your patients.
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {loading
-                  ? "Loading..."
-                  : `${activePrescriptions.length} records`}
+                {loading ? "Loading..." : `${activePrescriptions.length} records`}
               </span>
             </div>
           </CardHeader>
@@ -618,22 +558,22 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-lg">Prescription history</CardTitle>
+                <CardTitle className="text-lg">
+                  Prescription history
+                </CardTitle>
                 <p className="mt-1 text-xs text-slate-500">
                   View all prescriptions, including expired ones.
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {loading
-                  ? "Loading..."
-                  : `${historyPrescriptions.length} total`}
+                {loading ? "Loading..." : `${historyPrescriptions.length} total`}
               </span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-xs">
               {historyPrescriptions.map((p) => {
-                const expired =
+                const isExpired =
                   typeof p.expiresAt === "number" && p.expiresAt <= now;
                 return (
                   <div
@@ -647,15 +587,17 @@ export function DoctorPrescription({ doctorUid }: DoctorPrescriptionProps) {
                       <p className="text-slate-500">
                         {p.dosage} • {p.frequency} • {p.duration}
                       </p>
-                      <p className="text-slate-400">Issued: {p.dateIssued}</p>
+                      <p className="text-slate-400">
+                        Issued: {p.dateIssued}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p
                         className={`text-xs ${
-                          expired ? "text-red-500" : "text-emerald-600"
+                          isExpired ? "text-red-500" : "text-emerald-600"
                         }`}
                       >
-                        {expired ? "Expired" : "Active"}
+                        {isExpired ? "Expired" : "Active"}
                       </p>
                     </div>
                   </div>

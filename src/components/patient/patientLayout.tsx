@@ -19,6 +19,8 @@ import {
 import { db } from "../../lib/firebase";
 import { ref, onValue, push, set, update } from "firebase/database";
 import { getAuthenticatedUser } from "../../services/authService";
+import BloodSugarGraph from "./BloodSugarGraph"
+
 
 type Doctor = {
   uid: string;
@@ -61,6 +63,17 @@ export default function HealthTrackDashboard() {
     oxygenSaturation: 98,
   });
 
+
+  const bloodSugarData = [
+  { time: "10:00", bloodSugar: 95 },
+  { time: "10:05", bloodSugar: 102 },
+  { time: "10:10", bloodSugar: 110 },
+  { time: "10:15", bloodSugar: 145 },
+  { time: "10:20", bloodSugar: 180 },
+];
+
+  
+  
   const [editVitals, setEditVitals] = useState({ ...vitals });
 
   const [medications, setMedications] = useState([
@@ -475,6 +488,14 @@ export default function HealthTrackDashboard() {
               </p>
             </div>
           </div>
+
+          
+          <br></br>
+          <br></br>
+          <BloodSugarGraph data={bloodSugarData} />
+
+
+
 
           {/* Vitals Trend Chart */}
           <div className="mt-6 rounded-3xl bg-white p-8 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
