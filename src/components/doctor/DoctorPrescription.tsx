@@ -118,12 +118,12 @@ export function DoctorPrescription() {
       setPrescriptions(list);
       setLoading(false);
 
-      if (expiredKeys.length > 0) {
-        expiredKeys.forEach((k) => {
-          const itemRef = ref(db, `prescriptions/${k}`);
-          set(itemRef, null); // delete expired from DB
-        });
-      }
+      // if (expiredKeys.length > 0) {
+      //   expiredKeys.forEach((k) => {
+      //     const itemRef = ref(db, `prescriptions/${k}`);
+      //     set(itemRef, null); // delete expired from DB
+      //   });
+      // }
     });
 
     return () => unsubscribe();

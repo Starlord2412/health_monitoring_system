@@ -19,6 +19,7 @@ import {
 import { db } from "../../lib/firebase";
 import { ref, onValue, push, set, update } from "firebase/database";
 import { getAuthenticatedUser } from "../../services/authService";
+import BloodSugarGraph from "./BloodSugarGraph"
 
 type Doctor = {
   uid: string;
@@ -52,14 +53,26 @@ export default function HealthTrackDashboard() {
     connection: "Connected to patient",
   });
 
-  const [vitals, setVitals] = useState({
-    heartRate: 72,
-    bloodPressure: "120/80",
-    bloodSugar: 90,
-    temperature: 98.6,
-    weight: 180,
-    oxygenSaturation: 98,
-  });
+const [vitals, setVitals] = useState({
+  heartRate: 72,              // bpm
+  bloodPressure: "120/80",    // mmHg
+  bloodSugar: 90,             // mg/dL
+  temperature: 98.6,          // °F
+  weight: 180,                // lbs (or kg, based on your UI)
+  oxygenSaturation: 98,       // %
+  respiratoryRate: 16         // breaths/min
+});
+
+  
+  
+  const bloodSugarData = [
+  { time: "10:00", bloodSugar: 95 },
+  { time: "10:05", bloodSugar: 102 },
+  { time: "10:10", bloodSugar: 110 },
+  { time: "10:15", bloodSugar: 145 },
+  { time: "10:20", bloodSugar: 180 },
+];
+
 
   const [editVitals, setEditVitals] = useState({ ...vitals });
 
@@ -196,12 +209,12 @@ export default function HealthTrackDashboard() {
             typeof p.details.age === "number"
               ? p.details.age
               : p.details.age
-              ? Number(p.details.age)
-              : null,
+                ? Number(p.details.age)
+                : null,
           lastVisit: p.details.lastVisit || "",
           primaryCondition:
             p.details.primaryCondition === "unstable" ||
-            p.details.primaryCondition === "not_good"
+              p.details.primaryCondition === "not_good"
               ? p.details.primaryCondition
               : "stable",
         });
@@ -302,11 +315,10 @@ export default function HealthTrackDashboard() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all ${
-                activeTab === item.id
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all ${activeTab === item.id
                   ? "bg-emerald-100 text-emerald-700"
                   : "text-slate-600 hover:bg-slate-100"
-              }`}
+                }`}
             >
               <item.icon size={16} />
               <span>{item.label}</span>
@@ -368,13 +380,12 @@ export default function HealthTrackDashboard() {
                 ? ` • Age ${patientDetails.age}`
                 : ""}
               {patientDetails.primaryCondition
-                ? ` • Condition: ${
-                    patientDetails.primaryCondition === "stable"
-                      ? "Stable"
-                      : patientDetails.primaryCondition === "unstable"
-                      ? "Unstable"
-                      : "Not good"
-                  }`
+                ? ` • Condition: ${patientDetails.primaryCondition === "stable"
+                  ? "Stable"
+                  : patientDetails.primaryCondition === "unstable"
+                    ? "Unstable"
+                    : "Not good"
+                }`
                 : ""}
             </p>
           </div>
@@ -409,7 +420,7 @@ export default function HealthTrackDashboard() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
             {/* Overall Health Score */}
-            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
+            {/* <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-xs text-slate-500">
                   Overall health score
@@ -420,35 +431,22 @@ export default function HealthTrackDashboard() {
                 {healthScore}
               </p>
               <p className="text-xs text-slate-500">Good, stable condition</p>
-            </div>
+            </div> */}
 
             {/* Heart Rate */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Heart rate</p>
+                <p className="text-xs text-slate-500 ">Heart rate</p>
                 <Heart className="text-rose-500" size={18} />
               </div>
               <p className="mb-2 text-4xl font-semibold text-slate-900">
                 {vitals.heartRate}
               </p>
               <p className="text-xs text-slate-500">
-                Average today (bpm)
+                (bpm)
               </p>
             </div>
 
-            {/* Blood Pressure */}
-            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Blood pressure</p>
-                <Activity className="text-sky-500" size={18} />
-              </div>
-              <p className="mb-2 text-4xl font-semibold text-slate-900">
-                {vitals.bloodPressure}
-              </p>
-              <p className="text-xs text-slate-500">
-                Within normal range
-              </p>
-            </div>
 
             {/* Oxygen Level */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
@@ -474,7 +472,50 @@ export default function HealthTrackDashboard() {
                 Stable oxygen saturation
               </p>
             </div>
+
+
+            {/* Blood Pressure */}
+            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-xs text-slate-500">Blood pressure</p>
+                <Activity className="text-sky-500" size={18} />
+              </div>
+              <p className="mb-2 text-4xl font-semibold text-slate-900">
+                {vitals.bloodPressure}
+              </p>
+              <p className="text-xs text-slate-500">
+                Within normal range
+              </p>
+            </div>
+
+            {/* Respiratory Rate */}
+            <div className="rounded-3xl bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-xs text-slate-500">Respiratory rate</p>
+                <Activity className="text-emerald-500" size={18} />
+              </div>
+              <p className="mb-2 text-4xl font-semibold text-slate-900">
+                {vitals.respiratoryRate} <span className="text-lg">breaths/min</span>
+              </p>
+              <p className="text-xs text-slate-500">
+                Within normal range
+              </p>
+            </div>
+
           </div>
+
+
+
+          <br></br>
+              <br></br>
+          
+              <BloodSugarGraph data={bloodSugarData} />
+
+          
+
+
+
+
 
           {/* Vitals Trend Chart */}
           <div className="mt-6 rounded-3xl bg-white p-8 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
@@ -710,11 +751,10 @@ export default function HealthTrackDashboard() {
                         </div>
                       </div>
                       <button
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          selectedDoctorUid === doc.uid
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${selectedDoctorUid === doc.uid
                             ? "bg-slate-200 text-slate-700"
                             : "bg-emerald-600 text-white"
-                        }`}
+                          }`}
                         onClick={() => handleChooseDoctor(doc)}
                         disabled={selectedDoctorUid === doc.uid}
                       >
