@@ -357,7 +357,7 @@ export default function HealthTrackDashboard() {
           </div>
           <div>
             <h1 className="text-sm font-semibold text-slate-900">
-              HealthTrack
+              MediMinds
             </h1>
             <p className="text-xs text-slate-500">Patient Portal</p>
           </div>
