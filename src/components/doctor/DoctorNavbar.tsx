@@ -29,7 +29,7 @@ export function DoctorNavbar() {
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-900">
-              HealthTrack
+              MediMinds
             </p>
             <p className="text-xs text-slate-500">
               Doctor portal

@@ -407,7 +407,7 @@ export default function HealthTrackDashboard() {
           </div>
           <div>
             <h1 className="text-sm font-semibold text-slate-900">
-              HealthTrack
+              MediMinds
             </h1>
             <p className="text-xs text-slate-500">Patient Portal</p>
           </div>
@@ -457,7 +457,7 @@ export default function HealthTrackDashboard() {
   );
 
   const HeroSection = () => (
-    <div className="bg-[#cfeee6]">
+    <div className="bg-[#cfeee6] h-80">
       <div className="mx-auto flex max-w-6xl items-start justify-between px-6 pb-8 pt-10">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
@@ -504,7 +504,9 @@ export default function HealthTrackDashboard() {
           <p className="mb-2 text-[11px] text-slate-500">
             Scan or download this QR to identify the patient by UID.
           </p>
-          <UserQr />
+          
+             <UserQr uid={patientUid} />
+        
         </div>
 
         <div className="flex gap-4">

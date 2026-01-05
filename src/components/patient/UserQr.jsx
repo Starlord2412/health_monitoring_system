@@ -1,24 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+// src/components/patient/UserQr.jsx
 import QRCode from "react-qr-code";
-import { auth } from "../../lib/firebase";
+import { useRef } from "react";
 
-export default function UserQr() {
-  const [uid, setUid] = useState("");
-  const [isReady, setIsReady] = useState(false); // avoid flicker
+export default function UserQr({ uid }) {
   const qrRef = useRef(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setUid(user ? user.uid : "");
-      setIsReady(true);
-    });
-    return () => unsub();
-  }, []);
 
   const handleDownload = () => {
     if (!qrRef.current) return;
-
     const svg = qrRef.current.querySelector("svg");
     if (!svg) return;
 
@@ -48,11 +36,6 @@ export default function UserQr() {
     };
     img.src = url;
   };
-
-  if (!isReady) {
-    // wait until Firebase auth state is known → prevents blinking
-    return null;
-  }
 
   if (!uid) {
     return (
