@@ -38,6 +38,32 @@ type PatientDetails = {
   primaryCondition: "stable" | "unstable" | "not_good";
 };
 
+type VitalsState = {
+  heartRate: number | string;
+  bloodPressure: string;
+  bloodSugar: number | string;
+  temperature: number | string;
+  weight: number | string;
+  oxygenSaturation: number | string;
+  respiratoryRate: number | string;
+};
+
+type Medication = {
+  id: number;
+  name: string;
+  dosage: string;
+  frequency: string;
+  nextDose: string;
+};
+
+type Appointment = {
+  id: number;
+  type: string;
+  date: string;
+  time: string;
+  doctor: string;
+};
+
 export default function HealthTrackDashboard() {
   const [activeTab, setActiveTab] = useState<
     "home" | "alerts" | "medication" | "reports" | "consult" | "doctors"
@@ -49,10 +75,10 @@ export default function HealthTrackDashboard() {
   const [patient, setPatient] = useState({
     name: "John Doe",
     role: "Caregiver view",
-    connection: "Connected to patient",
+    connection: "No doctor assigned",
   });
 
-  const [vitals, setVitals] = useState({
+  const [vitals, setVitals] = useState<VitalsState>({
     heartRate: 72,
     bloodPressure: "120/80",
     bloodSugar: 90,
@@ -62,17 +88,9 @@ export default function HealthTrackDashboard() {
     respiratoryRate: 16,
   });
 
-  const bloodSugarData = [
-    { time: "10:00", bloodSugar: 95 },
-    { time: "10:05", bloodSugar: 102 },
-    { time: "10:10", bloodSugar: 110 },
-    { time: "10:15", bloodSugar: 145 },
-    { time: "10:20", bloodSugar: 180 },
-  ];
+  const [editVitals, setEditVitals] = useState<VitalsState>({ ...vitals });
 
-  const [editVitals, setEditVitals] = useState({ ...vitals });
-
-  const [medications, setMedications] = useState([
+  const [medications, setMedications] = useState<Medication[]>([
     {
       id: 1,
       name: "Aspirin",
@@ -89,7 +107,7 @@ export default function HealthTrackDashboard() {
     },
   ]);
 
-  const [appointments, setAppointments] = useState([
+  const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: 1,
       type: "Doctor appointment",
@@ -131,6 +149,11 @@ export default function HealthTrackDashboard() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctorUid, setSelectedDoctorUid] = useState<string>("");
   const [assignMsg, setAssignMsg] = useState<string | null>(null);
+
+  const [assignedDoctorId, setAssignedDoctorId] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "pending" | "connected" | null
+  >(null);
 
   const authUser = getAuthenticatedUser();
   const patientUid = authUser?.uid;
@@ -179,12 +202,19 @@ export default function HealthTrackDashboard() {
         oxygenSaturation: live.oxygenLevel ?? prev.oxygenSaturation,
         respiratoryRate: live.respiratoryRate ?? prev.respiratoryRate,
       }));
+      setEditVitals((prev) => ({
+        ...prev,
+        heartRate: live.heartRate ?? prev.heartRate,
+        bloodPressure: live.bloodPressure ?? prev.bloodPressure,
+        oxygenSaturation: live.oxygenLevel ?? prev.oxygenSaturation,
+        respiratoryRate: live.respiratoryRate ?? prev.respiratoryRate,
+      }));
     });
 
     return () => unsub();
   }, [patientUid]);
 
-  // ---------------- EXISTING DATA LOAD ----------------
+  // ---------------- LOAD DOCTORS ----------------
 
   useEffect(() => {
     const usersRef = ref(db, "users");
@@ -195,12 +225,13 @@ export default function HealthTrackDashboard() {
       }
       const data = snap.val() as Record<string, any>;
       const docs: Doctor[] = Object.entries(data)
-        .filter(([, u]) => u.role === "doctor")
+        .filter(([, u]) => (u as any).role === "doctor")
         .map(([uid, u]) => ({
           uid,
-          displayName: u.displayName || u.username || "Doctor",
-          email: u.email,
-          username: u.username,
+          displayName:
+            (u as any).displayName || (u as any).username || "Doctor",
+          email: (u as any).email,
+          username: (u as any).username,
         }));
       setDoctors(docs);
     });
@@ -208,21 +239,39 @@ export default function HealthTrackDashboard() {
     return () => unsub();
   }, []);
 
+  // ---------------- LOAD PATIENT + CONNECTION ----------------
+
   useEffect(() => {
     if (!patientUid) return;
     const pRef = ref(db, `patients/${patientUid}`);
     const unsub = onValue(pRef, (snap) => {
       if (!snap.exists()) return;
       const p = snap.val();
-      if (p.name) {
-        setPatient((prev) => ({
-          ...prev,
-          name: p.name,
-          connection: p.assignedDoctorName
-            ? `Connected to ${p.assignedDoctorName}`
-            : "No doctor assigned",
-        }));
-      }
+
+      const assignedId = p.assignedDoctorId || null;
+      const assignedName = p.assignedDoctorName || null;
+      const status: "pending" | "connected" | null =
+        p.connectionStatus === "connected"
+          ? "connected"
+          : assignedId
+          ? "pending"
+          : null;
+
+      setAssignedDoctorId(assignedId);
+      setConnectionStatus(status);
+
+      setPatient((prev) => ({
+        ...prev,
+        name: p.name || prev.name,
+        connection: assignedId
+          ? status === "connected" && assignedName
+            ? `Connected to ${assignedName}`
+            : assignedName
+            ? `Request sent to ${assignedName}`
+            : "Doctor request pending"
+          : "No doctor assigned",
+      }));
+
       if (p.details) {
         setPatientDetails({
           firstName: p.details.firstName || "",
@@ -252,17 +301,17 @@ export default function HealthTrackDashboard() {
     setShowEditModal(false);
   };
 
-  const handleAddMedication = (med: any) => {
-    setMedications([...medications, { ...med, id: Date.now() }]);
+  const handleAddMedication = (med: Omit<Medication, "id">) => {
+    setMedications((prev) => [...prev, { ...med, id: Date.now() }]);
     setShowMedicationModal(false);
   };
 
   const handleDeleteMedication = (id: number) => {
-    setMedications(medications.filter((m) => m.id !== id));
+    setMedications((prev) => prev.filter((m) => m.id !== id));
   };
 
   const handleDeleteAppointment = (id: number) => {
-    setAppointments(appointments.filter((a) => a.id !== id));
+    setAppointments((prev) => prev.filter((a) => a.id !== id));
   };
 
   const handleChooseDoctor = async (doctor: Doctor) => {
@@ -276,6 +325,7 @@ export default function HealthTrackDashboard() {
       await update(ref(db, `patients/${patientUid}`), {
         assignedDoctorId: doctor.uid,
         assignedDoctorName: doctor.displayName,
+        connectionStatus: "pending",
       });
 
       const reqRef = push(ref(db, `doctorRequests/${doctor.uid}`));
@@ -392,9 +442,7 @@ export default function HealthTrackDashboard() {
             <p className="text-xs font-medium text-slate-900">
               {patient.role}
             </p>
-            <p className="text-[11px] text-slate-500">
-              {patient.connection}
-            </p>
+            <p className="text-[11px] text-slate-500">{patient.connection}</p>
           </div>
           <div className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-600 transition-colors">
             {patient.name.charAt(0)}
@@ -449,7 +497,6 @@ export default function HealthTrackDashboard() {
           </div>
         </div>
 
-        {/* QR card – always rendered, inner QR handles auth loading to avoid flicker */}
         <div className="ml-6 max-w-xs rounded-2xl border border-emerald-100 bg-white px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.12)]">
           <h3 className="mb-1 text-xs font-semibold text-slate-900">
             Patient QR code
@@ -621,6 +668,11 @@ export default function HealthTrackDashboard() {
                 </button>
               </div>
             ))}
+            {medications.length === 0 && (
+              <p className="text-xs text-slate-500">
+                No medications added yet.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -645,9 +697,7 @@ export default function HealthTrackDashboard() {
                 </div>
               </div>
               {assignMsg && (
-                <p className="mb-3 text-xs text-emerald-700">
-                  {assignMsg}
-                </p>
+                <p className="mb-3 text-xs text-emerald-700">{assignMsg}</p>
               )}
               {doctors.length === 0 ? (
                 <p className="py-4 text-sm text-slate-500">
@@ -655,39 +705,51 @@ export default function HealthTrackDashboard() {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {doctors.map((doc) => (
-                    <div
-                      key={doc.uid}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50">
-                          <User className="h-4 w-4 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            {doc.displayName}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {doc.email}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          selectedDoctorUid === doc.uid
-                            ? "bg-slate-200 text-slate-700"
-                            : "bg-emerald-600 text-white"
-                        }`}
-                        onClick={() => handleChooseDoctor(doc)}
-                        disabled={selectedDoctorUid === doc.uid}
+                  {doctors.map((doc) => {
+                    const isAssigned = assignedDoctorId === doc.uid;
+                    const isConnected =
+                      isAssigned && connectionStatus === "connected";
+                    const isPending =
+                      isAssigned && connectionStatus === "pending";
+
+                    return (
+                      <div
+                        key={doc.uid}
+                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                       >
-                        {selectedDoctorUid === doc.uid
-                          ? "Requested"
-                          : "Choose"}
-                      </button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50">
+                            <User className="h-4 w-4 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              {doc.displayName}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {doc.email}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            isConnected
+                              ? "bg-slate-200 text-slate-700"
+                              : isAssigned
+                              ? "bg-slate-200 text-slate-700"
+                              : "bg-emerald-600 text-white"
+                          }`}
+                          onClick={() => handleChooseDoctor(doc)}
+                          disabled={isAssigned}
+                        >
+                          {isConnected
+                            ? "Connected"
+                            : isPending
+                            ? "Requested"
+                            : "Choose"}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -698,13 +760,10 @@ export default function HealthTrackDashboard() {
               <h2 className="mb-2 text-sm font-semibold text-slate-900">
                 Your current doctor
               </h2>
-              <p className="text-xs text-slate-500">
-                {patient.connection}
-              </p>
+              <p className="text-xs text-slate-500">{patient.connection}</p>
               <p className="mt-2 text-sm text-slate-700">
                 Once a doctor accepts your request, they will start
-                appearing in your dashboard and will see your health
-                data.
+                appearing in your dashboard and will see your health data.
               </p>
             </div>
 
@@ -812,6 +871,11 @@ export default function HealthTrackDashboard() {
       nextDose: "",
     });
 
+    const canAdd =
+      newMed.name.trim().length > 0 &&
+      newMed.dosage.trim().length > 0 &&
+      newMed.frequency.trim().length > 0;
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
         <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
@@ -860,8 +924,17 @@ export default function HealthTrackDashboard() {
               Cancel
             </button>
             <button
-              onClick={() => handleAddMedication(newMed)}
-              className="flex-1 rounded-full bg-emerald-500 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-600 transition-colors"
+              onClick={() =>
+                canAdd &&
+                handleAddMedication({
+                  name: newMed.name.trim(),
+                  dosage: newMed.dosage.trim(),
+                  frequency: newMed.frequency.trim(),
+                  nextDose: newMed.nextDose.trim() || "Soon",
+                })
+              }
+              disabled={!canAdd}
+              className="flex-1 rounded-full bg-emerald-500 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Add
             </button>
@@ -876,13 +949,15 @@ export default function HealthTrackDashboard() {
       ...patientDetails,
     });
 
-    const updateField = (
-      key: keyof PatientDetails,
-      value: string | number
-    ) => {
+    const updateField = (key: keyof PatientDetails, value: string | number) => {
       setLocalDetails((prev) => ({
         ...prev,
-        [key]: key === "age" ? (value === "" ? null : Number(value)) : value,
+        [key]:
+          key === "age"
+            ? value === ""
+              ? null
+              : Number(value)
+            : (value as any),
       }));
     };
 
@@ -960,7 +1035,8 @@ export default function HealthTrackDashboard() {
                 onChange={(e) =>
                   updateField(
                     "primaryCondition",
-                    e.target.value as PatientDetails["primaryCondition"]
+                    e.target
+                      .value as PatientDetails["primaryCondition"]
                   )
                 }
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 bg-white"
