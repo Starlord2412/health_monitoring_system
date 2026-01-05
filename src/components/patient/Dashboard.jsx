@@ -10,6 +10,10 @@ import { onValue, ref } from "firebase/database";
 import { db } from "../../lib/firebase";
 import { getAuthenticatedUser } from "../../services/authService";
 import { startLiveHealthUpdater } from "../../services/healthDataGenerator";
+import React from "react";
+import UserQr from "./UserQr";
+
+
 
 const initialVitals = {
   overallHealthScore: 0,
@@ -116,7 +120,18 @@ export default function Dashboard() {
           Simulated SpO₂
         </p>
       </div>
+
+
+
+
+
+
+
+
     </div>
+
+
+    
   );
 }
 

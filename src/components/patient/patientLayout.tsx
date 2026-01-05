@@ -21,6 +21,7 @@ import { ref, onValue, push, set, update } from "firebase/database";
 import { getAuthenticatedUser } from "../../services/authService";
 import BloodSugarGraph from "./BloodSugarGraph";
 import Dashboard from "./Dashboard";
+import UserQr from "./UserQr";
 
 type Doctor = {
   uid: string;
@@ -313,7 +314,6 @@ export default function HealthTrackDashboard() {
           : null;
 
       await update(ref(db, `patients/${patientUid}`), {
-        // flat fields for doctor cards / dashboard
         name:
           details.firstName || details.lastName
             ? `${details.firstName} ${details.lastName}`.trim()
@@ -326,7 +326,6 @@ export default function HealthTrackDashboard() {
             : details.primaryCondition === "unstable"
             ? "Unstable"
             : "Not good",
-        // nested details node
         details: {
           firstName: details.firstName || "",
           lastName: details.lastName || "",
@@ -430,7 +429,7 @@ export default function HealthTrackDashboard() {
               className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white hover:bg-slate-800"
             >
               <User className="h-3.5 w-3.5" />
-              Details
+              Add Details
             </button>
             <p className="text-xs text-slate-700">
               {patientDetails.firstName || patientDetails.lastName
@@ -448,6 +447,17 @@ export default function HealthTrackDashboard() {
                 : ""}
             </p>
           </div>
+        </div>
+
+        {/* QR card – always rendered, inner QR handles auth loading to avoid flicker */}
+        <div className="ml-6 max-w-xs rounded-2xl border border-emerald-100 bg-white px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.12)]">
+          <h3 className="mb-1 text-xs font-semibold text-slate-900">
+            Patient QR code
+          </h3>
+          <p className="mb-2 text-[11px] text-slate-500">
+            Scan or download this QR to identify the patient by UID.
+          </p>
+          <UserQr />
         </div>
 
         <div className="flex gap-4">
@@ -635,7 +645,9 @@ export default function HealthTrackDashboard() {
                 </div>
               </div>
               {assignMsg && (
-                <p className="mb-3 text-xs text-emerald-700">{assignMsg}</p>
+                <p className="mb-3 text-xs text-emerald-700">
+                  {assignMsg}
+                </p>
               )}
               {doctors.length === 0 ? (
                 <p className="py-4 text-sm text-slate-500">
