@@ -130,7 +130,7 @@ export default function DoctorDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#cfeee6] py-8">
+    <div className="min-h-screen  py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6">
         {/* Header */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
