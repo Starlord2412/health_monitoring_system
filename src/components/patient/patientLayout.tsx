@@ -1,5 +1,6 @@
 // src/components/patient/patientLayout.tsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Heart,
   Activity,
@@ -64,6 +65,7 @@ type Appointment = {
   doctor: string;
 };
 
+ 
 export default function HealthTrackDashboard() {
   const [activeTab, setActiveTab] = useState<
     "home" | "alerts" | "medication" | "reports" | "consult" | "doctors"
@@ -157,7 +159,14 @@ export default function HealthTrackDashboard() {
 
   const authUser = getAuthenticatedUser();
   const patientUid = authUser?.uid;
+ const navigate = useNavigate();
 
+  const handleLogout = () => {
+    // yaha pe logout ka logic daalo agar koi auth state hai
+    // localStorage.clear();
+    // sessionStorage.clear();
+    navigate("/"); // ya jis route pe jana hai
+  };
   // ---------------- HEALTH SCORE FROM liveHealth ----------------
 
   const calculateHealthScore = (live: any) => {
@@ -398,6 +407,7 @@ export default function HealthTrackDashboard() {
 
   // ---------------- UI COMPONENTS ----------------
 
+
   const Header = () => (
     <div className="border-b border-emerald-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -447,10 +457,14 @@ export default function HealthTrackDashboard() {
           <div className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-600 transition-colors">
             {patient.name.charAt(0)}
           </div>
-          <button className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 transition-colors">
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
+          <button
+  onClick={handleLogout}
+  className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 transition-colors"
+>
+  <LogOut size={16} />
+  <span>Logout</span>
+</button>
+
         </div>
       </div>
     </div>
@@ -587,7 +601,7 @@ export default function HealthTrackDashboard() {
               })}
 
               <div className="flex flex-1 flex-col items-center gap-3">
-                <div className="flex h-[160px] w-full flex-col items-center justify-end gap-2">
+                <div className="flex h-40 w-full flex-col items-center justify-end gap-2">
                   <div className="text-orange-500">
                     <svg
                       width="22"

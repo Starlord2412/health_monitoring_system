@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Activity,
   Users,
@@ -18,7 +19,17 @@ const navItems = [
   { to: "/doctor/consult", icon: MessageSquare, label: "Consult" },
 ];
 
+
 export function DoctorNavbar() {
+
+
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    navigate("/");
+  };
+
+
+
   return (
     <header className="border-b bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
@@ -71,10 +82,14 @@ export function DoctorNavbar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
             F
           </div>
-          <button className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900">
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Logout</span>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
           </button>
+
         </div>
       </div>
     </header>

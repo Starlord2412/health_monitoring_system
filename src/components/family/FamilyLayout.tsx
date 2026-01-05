@@ -27,7 +27,6 @@ export default function FamilyLayout() {
 
   const handleLogout = () => {
     navigate("/", { replace: true });
-    alert("Logout clicked");
   };
 
   return (
