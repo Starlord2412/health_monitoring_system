@@ -8,4 +8,3 @@ export default defineConfig({
   plugins: [react(),tailwindcss()],
   base: "/health_monitoring_system",
 })
-  
