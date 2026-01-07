@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "../components/ui/card.js";
 import { useRef } from "react";
-import Footer from "../components/ui/footer.jsx";
+import Footer from "../components/ui/Footer.jsx";
 
 export default function HomePage() {
   const navigate = useNavigate();
