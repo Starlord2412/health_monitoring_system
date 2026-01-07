@@ -1,19 +1,20 @@
- import { initializeApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
-import { getAuth } from "firebase/auth";
-import { getMessaging } from "firebase/messaging";
+// src/lib/firebase.js
+import { initializeApp } from 'firebase/app'
+import { getDatabase } from 'firebase/database'
+import { getAuth } from 'firebase/auth'
+import { getMessaging } from 'firebase/messaging'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAB5u5k0fUyGzmjWn5b1PXeSFE8rtzVAY8",
-  authDomain: "fir-signup-login-logout-28864.firebaseapp.com",
-  databaseURL: "https://fir-signup-login-logout-28864-default-rtdb.firebaseio.com",
-  projectId: "fir-signup-login-logout-28864",
-  storageBucket: "fir-signup-login-logout-28864.firebasestorage.app",
-  messagingSenderId: "140565115906",
-  appId: "1:140565115906:web:73dc480ab38623a10be31b",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
-export const auth = getAuth(app);
-export const messaging = getMessaging(app);
+export const app = initializeApp(firebaseConfig)
+export const db = getDatabase(app)
+export const auth = getAuth(app)
+export const messaging = getMessaging(app)
