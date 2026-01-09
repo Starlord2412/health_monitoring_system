@@ -1,113 +1,123 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+
 import HomePage from "./pages/homepage";
-import FamilyLayout from "./components/family/FamilyLayout";
-import FamilyDashboard from "./components/family/FamilyDashboard";
-import AlertsPage from "./components/family/AlertsPage";
-import ReportsPage from "./components/family/ReportsPage.tsx";
-import MedicationPage from "./components/family/MedicationPage";
-import ContactDoctorPage from "./components/family/ContactDoctorPage";
 import SignupPage from "./components/signup";
 import LoginPage from "./components/login";
-import { DoctorLayout } from "./components/doctor/DoctorLayout";
-import DoctorDashboard from "./components/doctor/DoctorDashboard.tsx";
-import PatientsList from "./components/doctor/PatientsList.tsx";
-import { DoctorAlerts } from "./components/doctor/DoctorAlerts";
-import { DoctorReports } from "./components/doctor/DoctorReports";
-import { DoctorPrescription } from "./components/doctor/DoctorPrescription";
-import { DoctorConsult } from "./components/doctor/DoctorConsult";
-import AdminDashboard from "./components/admin/adminLayout";
 import AboutPage from "./components/AboutPage";
-import HealthTrackDashboard from "./components/patient/patientLayout";
 import FAQPage from "./components/FAQPage";
-import "./index.css";
-import { getToken } from "firebase/messaging";
-import { messaging } from "./lib/firebase.js";
-import {  onMessage } from "firebase/messaging";
 
-import PatientDashboard from "./components/doctor/PatientDashboard";
+
+
+
+
+// import FamilyLayout from "./components/family/FamilyLayout";
+// import FamilyDashboard from "./components/family/FamilyDashboard";x`
+// import AlertsPage from "./components/family/AlertsPage";
+// import MedicationPage from "./components/family/MedicationPage";
+// import ReportsPage from "./components/family/ReportsPage";
+// import ContactDoctorPage from "./components/family/ContactDoctorPage";
+
+
+import AlertsPage from "./components/family/AlertsPage";
+import ContactDoctorPage from "./components/family/ContactDoctorPage";
+import FamilyDashboard from "./components/family/FamilyDashboard";
+import FamilyLayout from "./components/family/FamilyLayout";
+import MedicationPage from "./components/family/MedicationPage";
+import ReportsPage from "./components/family/ReportsPage";
+
+
+import AdminDashboard from "./components/admin/adminLayout";
+
+// DOCTOR COMPONENTS (uncomment when you actually use these routes)
+import DoctorDashboard from "./components/doctor/DoctorDashboard";
+// import DoctorLayout from "./components/doctor/DoctorLayout";
+// import DoctorAlerts from "./components/doctor/DoctorAlerts";
+// import DoctorReports from "./components/doctor/DoctorReports";
+// import DoctorPrescription from "./components/doctor/DoctorPrescription";
+// import DoctorConsult from "./components/doctor/DoctorConsult";
+import PatientsList from "./components/doctor/PatientsList.js"
+
+// PATIENT LAYOUT + DASHBOARD
+import PatientLayout from "./components/patient/patientLayout";       // layout with navbar
+import HealthTrackDashboard from "./components/patient/patientLayout"; // default export is HealthTrackDashboard in that file
+// If you later split pages, you can create these:
+// import PatientAlerts from "./components/patient/PatientAlerts";
+// import PatientMedication from "./components/patient/PatientMedication";
+// import PatientReports from "./components/patient/PatientReports";
+// import PatientConsult from "./components/patient/PatientConsult";
+// import PatientDoctors from "./components/patient/PatientDoctors";
+
+import "./index.css";
+
+import { getToken, onMessage } from "firebase/messaging";
+import { messaging } from "./lib/firebase.js";
 import { getAuthenticatedUser } from "./services/authService.js";
-import { useEffect } from "react";
-// simple guard
+// import AlertsPage from './components/family/AlertsPage';
+// import ContactDoctorPage from './components/family/ContactDoctorPage';
+// import FamilyDashboard from './components/family/FamilyDashboard';
+// import FamilyLayout from './components/family/FamilyLayout';
+// import MedicationPage from './components/family/MedicationPage';
+// import ReportsPage from './components/family/ReportsPage';
+
 function RequireAuth({ children, allowedRoles }) {
-  const user = getAuthenticatedUser()
+  const user = getAuthenticatedUser();
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/" replace />;
   }
 
-  return children
+  return children;
 }
 
 export default function App() {
   const user = getAuthenticatedUser(); // { uid, role, ... } or null
 
-
-
-  // async function requestPermission() {
-
-  //   const permission = await Notification.requestPermission();
-
-  //   console.log('Requesting permission...');
-  //   Notification.requestPermission()
-  //   if (permission === 'granted') {
-  //     console.log('Notification permission granted.');
-  //     const token = await getToken(messaging, {
-  //       vapidKey: 'BBoqBPkCXEWwPndxGEOKlbV7RA4jExcoHxjPg37l7J4TOCWMQ8ftpdr0uyQE-TG27o3EU8S83hFD9P66Gq7c9l4',
-  //     });
-  //     console.log('Token:', token);
-
-  //   }
-  //   else {
-  //     console.log("Rejected")
-  //   }
-  // }
-
-
-
   useEffect(() => {
-    // Ask permission and get token once user/context is ready
     const requestPermissionAndToken = async () => {
       try {
-        console.log('Requesting notification permission...')
-        const permission = await Notification.requestPermission()
+        console.log("Requesting notification permission...");
+        const permission = await Notification.requestPermission();
 
-        if (permission !== 'granted') {
-          console.log('Notification permission rejected:', permission)
-          return
+        if (permission !== "granted") {
+          console.log("Notification permission rejected:", permission);
+          return;
         }
 
-        console.log('Notification permission granted.')
+        console.log("Notification permission granted.");
 
         const token = await getToken(messaging, {
           vapidKey:
-            'BBoqBPkCXEWwPndxGEOKlbV7RA4jExcoHxjPg37l7J4TOCWMQ8ftpdr0uyQE-TG27o3EU8S83hFD9P66Gq7c9l4',
-        })
+            "BBoqBPkCXEWwPndxGEOKlbV7RA4jExcoHxjPg37l7J4TOCWMQ8ftpdr0uyQE-TG27o3EU8S83hFD9P66Gq7c9l4",
+        });
 
-        console.log('FCM token:', token)
-        // TODO: send token to your backend if needed
+        console.log("FCM token:", token);
 
-        // Listen for foreground messages
         onMessage(messaging, (payload) => {
-          console.log('Foreground message received:', payload)
+          console.log("Foreground message received:", payload);
           alert(
             payload.notification?.title
-              ? `${payload.notification.title}: ${payload.notification.body || ''}`
-              : 'New notification'
-          )
-        })
+              ? `${payload.notification.title}: ${
+                  payload.notification.body || ""
+                }`
+              : "New notification"
+          );
+        });
       } catch (err) {
-        console.error('Error while requesting permission / getting token:', err)
+        console.error(
+          "Error while requesting permission / getting token:",
+          err
+        );
       }
-    }
+    };
 
-    requestPermissionAndToken()
-  }, [user])
-
+    requestPermissionAndToken();
+  }, [user]);
 
   return (
     <Routes>
@@ -118,7 +128,7 @@ export default function App() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/faq" element={<FAQPage />} />
 
-      {/* Doctor Routes */}
+      {/* Doctor Routes (wrap in layout when ready) */}
       {/* <Route
         path="/doctor"
         element={
@@ -126,26 +136,14 @@ export default function App() {
             <DoctorLayout user={user} />
           </RequireAuth>
         }
-      > */}
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DoctorDashboard />} />
-
-        {/* patients list (cards) */}
         <Route
           path="patients"
           element={<PatientsList doctorUid={user?.uid || ""} />}
         />
-
-        
-
-
-
-        {/* NEW: specific patient dashboard page */}
-        {/* <Route
-          path="patients/:patientId"
-          element={<PatientDashboard />}
-        />
-
+        <Route path="patients/:patientId" element={<PatientDashboard />} />
         <Route path="alerts" element={<DoctorAlerts />} />
         <Route path="reports" element={<DoctorReports />} />
         <Route
@@ -155,18 +153,26 @@ export default function App() {
         <Route path="consult" element={<DoctorConsult />} />
       </Route> */}
 
-        
+      {/* Patient Routes – NEW layout with navbar */}
+      <Route
+        path="/patient"
+        element={
+          <RequireAuth allowedRoles={["patient"]}>
+            <PatientLayout />
+          </RequireAuth>
+        }
+      >
+        {/* For now, use HealthTrackDashboard (full patient dashboard) */}
+        <Route index element={<HealthTrackDashboard />} />
 
-        <Route path="/patient" element={<PatientLayout />}>
-  <Route index element={<PatientDashboard />} />
-  <Route path="alerts" element={<PatientAlerts />} />
-  <Route path="medication" element={<PatientMedication />} />
-  <Route path="reports" element={<PatientReports />} />
-  <Route path="consult" element={<PatientConsult />} />
-  <Route path="doctors" element={<PatientDoctors />} />
-</Route>
-
-      
+        {/* When you split pages, map them like this:
+        <Route path="alerts" element={<PatientAlerts />} />
+        <Route path="medication" element={<PatientMedication />} />
+        <Route path="reports" element={<PatientReports />} />
+        <Route path="consult" element={<PatientConsult />} />
+        <Route path="doctors" element={<PatientDoctors />} />
+        */}
+      </Route>
 
       {/* Family Routes */}
       <Route
@@ -183,18 +189,6 @@ export default function App() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="medication" element={<MedicationPage />} />
         <Route path="contact-doctor" element={<ContactDoctorPage />} />
-      </Route>
-
-      {/* Patient Routes */}
-      <Route
-        path="/patient"
-        element={
-          <RequireAuth allowedRoles={["patient"]}>
-            <HealthTrackDashboard />
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
       {/* Admin */}

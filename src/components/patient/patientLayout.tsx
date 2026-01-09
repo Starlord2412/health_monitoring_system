@@ -1,4 +1,3 @@
-// src/components/patient/PatientLayout.tsx
 import React from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
@@ -14,8 +13,10 @@ import { getAuthenticatedUser } from "../../services/authService";
 
 const PatientLayout: React.FC = () => {
   const navigate = useNavigate();
-  const authUser = getAuthenticatedUser(); // { uid, username, ... } from your service
-  const patientName = authUser?.username || "Patient";
+  const authUser = getAuthenticatedUser();
+  const patientName = authUser?.username || "John Doe";
+  const patientRole = "Caregiver view";
+  const patientConnection = "No doctor assigned";
 
   const handleLogout = () => {
     // yaha pe logout ka logic daalo agar koi auth state hai
@@ -35,21 +36,23 @@ const PatientLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#cfeee6]">
-      {/* Header */}
+      {/* === TOP NAVBAR (same style as old Header) === */}
       <header className="border-b border-emerald-100 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          {/* Logo + title */}
+          {/* Left: logo + title */}
           <div className="flex items-center gap-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-sm font-semibold text-white">
               HT
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-slate-900">MediMinds</h1>
+              <h1 className="text-sm font-semibold text-slate-900">
+                MediMinds
+              </h1>
               <p className="text-xs text-slate-500">Patient Portal</p>
             </div>
           </div>
 
-          {/* Nav items */}
+          {/* Center: nav buttons */}
           <nav className="flex items-center gap-2">
             {navItems.map((item) => (
               <NavLink
@@ -71,15 +74,21 @@ const PatientLayout: React.FC = () => {
             ))}
           </nav>
 
-          {/* User + logout */}
+          {/* Right: role + connection + avatar + logout */}
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-xs font-medium text-slate-900">Patient</p>
-              <p className="text-[11px] text-slate-500">Health tracking</p>
+              <p className="text-xs font-medium text-slate-900">
+                {patientRole}
+              </p>
+              <p className="text-[11px] text-slate-500">
+                {patientConnection}
+              </p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
+
+            <div className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white hover:bg-emerald-600 transition-colors">
               {patientName.charAt(0).toUpperCase()}
             </div>
+
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 transition-colors"
@@ -91,7 +100,7 @@ const PatientLayout: React.FC = () => {
         </div>
       </header>
 
-      {/* Nested routes render here */}
+      {/* === Nested pages will render here === */}
       <main>
         <Outlet />
       </main>
