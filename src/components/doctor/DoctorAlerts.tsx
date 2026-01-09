@@ -5,10 +5,11 @@ import { Button } from "../ui/button";
 import { AlertTriangle, Bell, Heart, Activity } from "lucide-react";
 
 import { db } from "../../lib/firebase";
-import { ref, onValue, remove } from "firebase/database";
+import { ref, onValue } from "firebase/database";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 type AlertItem = {
-  id: number; // same as Firebase key: /alerts/{id}
+  id: number;
   patientId: string;
   patient: string;
   type: string;
@@ -16,6 +17,16 @@ type AlertItem = {
   severity: "critical" | "high" | "warning" | "info" | string;
   time: string;
 };
+
+type LiveHealth = {
+  heartRate?: number;
+  oxygenLevel?: number;
+  bloodPressure?: string;
+  condition?: string;
+  // add other fields from liveHealth if you need them
+};
+
+const MAX_NORMAL_HR = 50; // simple adult resting upper limit[web:12]
 
 const getSeverityColor = (severity: string) => {
   const colors = {
@@ -39,7 +50,6 @@ const getIconColor = (severity: string) => {
   return colors[severity as keyof typeof colors] || "text-slate-500";
 };
 
-// map severity → icon component
 const severityToIcon: Record<string, React.ComponentType<any>> = {
   critical: AlertTriangle,
   high: Heart,
@@ -52,70 +62,77 @@ export function DoctorAlerts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const alertsRef = ref(db, "alerts");
+    const auth = getAuth();
+    let liveHealthUnsub: (() => void) | null = null;
 
-    const unsub = onValue(
-      alertsRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setAlerts([]);
-          setLoading(false);
-          return;
-        }
-
-        const data = snapshot.val() as Record<string, any>;
-
-        // IMPORTANT: assume /alerts looks like:
-        // alerts: { "1": {...}, "2": {...} }
-        const list: AlertItem[] = Object.entries(data).map(
-          ([key, item]: [string, any]) => ({
-            id: Number(item.id ?? key), // use item.id or key
-            patientId: item.patientId,
-            patient: item.patient,
-            type: item.type,
-            message: item.message,
-            severity: item.severity,
-            time: item.time,
-          })
-        );
-
-        const order = { critical: 0, high: 1, warning: 2, info: 3 };
-        list.sort(
-          (a, b) =>
-            (order[a.severity as keyof typeof order] ?? 99) -
-            (order[b.severity as keyof typeof order] ?? 99)
-        );
-
-        setAlerts(list);
-        setLoading(false);
-      },
-      () => {
+    const authUnsub = onAuthStateChanged(auth, (user) => {
+      // if not logged in, clear alerts
+      if (!user) {
         setAlerts([]);
         setLoading(false);
+        if (liveHealthUnsub) liveHealthUnsub();
+        return;
       }
-    );
 
-    return () => unsub();
+      setLoading(true);
+
+      // IMPORTANT: patientId must match the key under /patients in your DB
+      // If you are storing patients under their auth uid, this is correct:
+      const patientId = user.uid;
+      // If you use a different id (like the long random one in screenshot),
+      // replace patientId with that value from your UI / context.
+
+      const liveHealthRef = ref(
+        db,
+        `patients/${patientId}/liveHealth`
+      );
+
+      liveHealthUnsub = onValue(
+        liveHealthRef,
+        (snapshot) => {
+          const data = (snapshot.val() || {}) as LiveHealth;
+
+          const newAlerts: AlertItem[] = [];
+
+          if (data.heartRate && data.heartRate > MAX_NORMAL_HR) {
+            const now = new Date();
+            newAlerts.push({
+              id: now.getTime(),
+              patientId,
+              patient: user.email || user.displayName || "Current patient",
+              type: "Elevated heart rate",
+              message: `Heart rate is ${data.heartRate} bpm, which is above normal.`,
+              severity: "high",
+              time: now.toLocaleString(),
+            });
+          }
+
+          // you can add other rules, e.g. low oxygenLevel, very high BP, etc.
+
+          setAlerts(newAlerts);
+          setLoading(false);
+        },
+        () => {
+          setAlerts([]);
+          setLoading(false);
+        }
+      );
+    });
+
+    return () => {
+      authUnsub();
+      if (liveHealthUnsub) liveHealthUnsub();
+    };
   }, []);
 
   const hasAlerts = alerts.length > 0;
 
-  const handleClearAll = async () => {
-    try {
-      await remove(ref(db, "alerts"));
-    } catch (e) {
-      console.error(e);
-    }
+  const handleClearAll = () => {
+    setAlerts([]);
   };
 
-  const handleDismiss = async (id: number) => {
-    try {
-      // if firebase node path is /alerts/{id}
-      await remove(ref(db, `alerts/${id}`));
-      // onValue listener will refresh alerts automatically
-    } catch (e) {
-      console.error(e);
-    }
+  const handleDismiss = (id: number) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
   };
 
   return (
@@ -128,7 +145,7 @@ export function DoctorAlerts() {
               AI-flagged alerts
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Real-time health anomaly detection across your patient panel.
+              Real-time health anomaly detection for this patient.
             </p>
           </div>
           <div className="hidden gap-3 sm:flex">
@@ -172,8 +189,7 @@ export function DoctorAlerts() {
             {!loading && hasAlerts && (
               <div className="space-y-3">
                 {alerts.map((alert) => {
-                  const Icon =
-                    severityToIcon[alert.severity] ?? AlertTriangle;
+                  const Icon = severityToIcon[alert.severity] ?? AlertTriangle;
                   return (
                     <Card
                       key={alert.id}
