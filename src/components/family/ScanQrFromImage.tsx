@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
-import QrScanner from "qr-scanner";
+// src/components/ScanQrFromImage.tsx
+import React, { useRef, useState } from "react";
+import jsQR from "jsqr";
 
 type Props = {
   onUidDetected: (uid: string) => void;
@@ -19,31 +20,70 @@ export default function ScanQrFromImage({ onUidDetected }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setStatus("Decoding QR...");
-    try {
-      const result = await QrScanner.scanImage(file, {
-        returnDetailedScanResult: true,
-      });
-      const text = result.data.trim();
-      onUidDetected(text);
-      setStatus("QR scanned successfully.");
-    } catch (err) {
-      console.error("QR decode error", err);
-      setStatus("Could not read QR. Please try another image.");
-    } finally {
-      e.target.value = "";
-    }
+    setStatus("Reading image...");
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setStatus("Could not get canvas context");
+          return;
+        }
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        const code = jsQR(
+          imageData.data,
+          imageData.width,
+          imageData.height
+        );
+
+        if (code && code.data) {
+          console.log("QR decoded:", code);
+          setStatus("QR detected ✔");
+          // If your QR contains only the UID, this is fine.
+          // If it contains JSON, parse it and extract uid.
+          onUidDetected(code.data.trim());
+        } else {
+          setStatus("No QR code found in image");
+        }
+      };
+      img.onerror = () => {
+        setStatus("Could not load image");
+      };
+      img.src = reader.result as string;
+    };
+
+    reader.onerror = () => {
+      setStatus("Error reading file");
+    };
+
+    reader.readAsDataURL(file);
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-start gap-1">
       <button
         type="button"
         onClick={handlePickImage}
-        className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 transition-colors"
+        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700"
       >
-        Pick QR from gallery
+        Scan QR from gallery
       </button>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -51,6 +91,7 @@ export default function ScanQrFromImage({ onUidDetected }: Props) {
         className="hidden"
         onChange={handleFileChange}
       />
+
       {status && (
         <p className="text-[11px] text-slate-500">{status}</p>
       )}
