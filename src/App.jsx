@@ -119,14 +119,14 @@ export default function App() {
       <Route path="/faq" element={<FAQPage />} />
 
       {/* Doctor Routes */}
-      <Route
+      {/* <Route
         path="/doctor"
         element={
           <RequireAuth allowedRoles={["doctor"]}>
             <DoctorLayout user={user} />
           </RequireAuth>
         }
-      >
+      > */}
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DoctorDashboard />} />
 
@@ -136,8 +136,12 @@ export default function App() {
           element={<PatientsList doctorUid={user?.uid || ""} />}
         />
 
+        
+
+
+
         {/* NEW: specific patient dashboard page */}
-        <Route
+        {/* <Route
           path="patients/:patientId"
           element={<PatientDashboard />}
         />
@@ -149,7 +153,20 @@ export default function App() {
           element={<DoctorPrescription doctorUid={user?.uid || ""} />}
         />
         <Route path="consult" element={<DoctorConsult />} />
-      </Route>
+      </Route> */}
+
+        
+
+        <Route path="/patient" element={<PatientLayout />}>
+  <Route index element={<PatientDashboard />} />
+  <Route path="alerts" element={<PatientAlerts />} />
+  <Route path="medication" element={<PatientMedication />} />
+  <Route path="reports" element={<PatientReports />} />
+  <Route path="consult" element={<PatientConsult />} />
+  <Route path="doctors" element={<PatientDoctors />} />
+</Route>
+
+      
 
       {/* Family Routes */}
       <Route
