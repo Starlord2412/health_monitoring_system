@@ -58,7 +58,7 @@ const isExpired = (p: Prescription): boolean => {
   return today >= expiry;
 };
 
-export function DoctorPrescription() {
+export default function DoctorPrescription() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
 

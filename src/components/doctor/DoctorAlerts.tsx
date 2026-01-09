@@ -57,7 +57,7 @@ const severityToIcon: Record<string, React.ComponentType<any>> = {
   info: Activity,
 };
 
-export function DoctorAlerts() {
+export default function DoctorAlerts() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 

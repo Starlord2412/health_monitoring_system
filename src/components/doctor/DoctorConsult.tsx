@@ -69,7 +69,7 @@ const mockMessages = [
   },
 ];
 
-export function DoctorConsult() {
+export default function DoctorConsult() {
   const [selectedChat, setSelectedChat] = useState(mockChats[0]);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(mockMessages);

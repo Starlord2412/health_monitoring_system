@@ -10,6 +10,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { getAuthenticatedUser } from "../../services/authService";
+import PatientDashboard from "./PatientDashboard";
 
 const PatientLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const PatientLayout: React.FC = () => {
   };
 
   const navItems = [
-    { icon: Home, label: "Home", path: "/patient" },
+    { icon: Home, label: "Home", path: "/patient/dashboard" },
     { icon: Stethoscope, label: "Doctors", path: "/patient/doctors" },
     { icon: Bell, label: "Alerts", path: "/patient/alerts" },
     { icon: Pill, label: "Medication", path: "/patient/medication" },
@@ -99,8 +100,7 @@ const PatientLayout: React.FC = () => {
           </div>
         </div>
       </header>
-
-      {/* === Nested pages will render here === */}
+        
       <main>
         <Outlet />
       </main>

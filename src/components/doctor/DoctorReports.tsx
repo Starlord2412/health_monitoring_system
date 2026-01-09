@@ -245,7 +245,7 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-export function DoctorReports() {
+export default function DoctorReports() {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(true);
 

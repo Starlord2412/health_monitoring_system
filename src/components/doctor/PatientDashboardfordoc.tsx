@@ -37,7 +37,7 @@ type Patient = {
   liveHealth?: LiveHealth;
 };
 
-const PatientDashboard: React.FC = () => {
+const PatientDashboardfordoc: React.FC = () => {
   const { patientId } = useParams();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [liveHealth, setLiveHealth] = useState<LiveHealth | null>(null);
@@ -333,4 +333,4 @@ const PatientDashboard: React.FC = () => {
   );
 };
 
-export default PatientDashboard;
+export default PatientDashboardfordoc;

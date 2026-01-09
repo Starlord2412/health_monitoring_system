@@ -8,59 +8,43 @@ import LoginPage from "./components/login";
 import AboutPage from "./components/AboutPage";
 import FAQPage from "./components/FAQPage";
 
-
-
-
-
-// import FamilyLayout from "./components/family/FamilyLayout";
-// import FamilyDashboard from "./components/family/FamilyDashboard";x`
-// import AlertsPage from "./components/family/AlertsPage";
-// import MedicationPage from "./components/family/MedicationPage";
-// import ReportsPage from "./components/family/ReportsPage";
-// import ContactDoctorPage from "./components/family/ContactDoctorPage";
-
-
-import AlertsPage from "./components/family/AlertsPage";
-import ContactDoctorPage from "./components/family/ContactDoctorPage";
-import FamilyDashboard from "./components/family/FamilyDashboard";
+// FAMILY
 import FamilyLayout from "./components/family/FamilyLayout";
+import FamilyDashboard from "./components/family/FamilyDashboard";
+import AlertsPage from "./components/family/AlertsPage";
 import MedicationPage from "./components/family/MedicationPage";
 import ReportsPage from "./components/family/ReportsPage";
+import ContactDoctorPage from "./components/family/ContactDoctorPage";
 
-
+// ADMIN
 import AdminDashboard from "./components/admin/adminLayout";
 
-// DOCTOR COMPONENTS (uncomment when you actually use these routes)
+// DOCTOR
+import DoctorLayout from "./components/doctor/DoctorLayout";
 import DoctorDashboard from "./components/doctor/DoctorDashboard";
-// import DoctorLayout from "./components/doctor/DoctorLayout";
-// import DoctorAlerts from "./components/doctor/DoctorAlerts";
-// import DoctorReports from "./components/doctor/DoctorReports";
-// import DoctorPrescription from "./components/doctor/DoctorPrescription";
-// import DoctorConsult from "./components/doctor/DoctorConsult";
-import PatientsList from "./components/doctor/PatientsList.js"
+import DoctorAlerts from "./components/doctor/DoctorAlerts";
+import DoctorReports from "./components/doctor/DoctorReports";
+import DoctorPrescription from "./components/doctor/DoctorPrescription";
+import DoctorConsult from "./components/doctor/DoctorConsult";
+import PatientsList from "./components/doctor/PatientsList.js";
+import PatientDashboardfordoc from "./components/doctor/PatientDashboardfordoc"; // make sure this file exists
 
-// PATIENT LAYOUT + DASHBOARD
-import PatientLayout from "./components/patient/patientLayout";       // layout with navbar
-import HealthTrackDashboard from "./components/patient/patientLayout"; // default export is HealthTrackDashboard in that file
-// If you later split pages, you can create these:
-// import PatientAlerts from "./components/patient/PatientAlerts";
-// import PatientMedication from "./components/patient/PatientMedication";
-// import PatientReports from "./components/patient/PatientReports";
-// import PatientConsult from "./components/patient/PatientConsult";
-// import PatientDoctors from "./components/patient/PatientDoctors";
+// PATIENT
+import PatientLayout from "./components/patient/patientLayout";
+import PatientAlerts from "./components/patient/PatientAlerts";
+import PatientMedication from "./components/patient/PatientMedication";
+import PatientReports from "./components/patient/PatientReports";
+import PatientConsult from "./components/patient/PatientConsult";
+import PatientDoctors from "./components/patient/PatientDoctors";
+import PatientDashboard from "./components/patient/PatientDashboard.js";
 
 import "./index.css";
 
 import { getToken, onMessage } from "firebase/messaging";
 import { messaging } from "./lib/firebase.js";
 import { getAuthenticatedUser } from "./services/authService.js";
-// import AlertsPage from './components/family/AlertsPage';
-// import ContactDoctorPage from './components/family/ContactDoctorPage';
-// import FamilyDashboard from './components/family/FamilyDashboard';
-// import FamilyLayout from './components/family/FamilyLayout';
-// import MedicationPage from './components/family/MedicationPage';
-// import ReportsPage from './components/family/ReportsPage';
 
+// ---------- Auth wrapper ----------
 function RequireAuth({ children, allowedRoles }) {
   const user = getAuthenticatedUser();
 
@@ -75,6 +59,7 @@ function RequireAuth({ children, allowedRoles }) {
   return children;
 }
 
+// ---------- App component ----------
 export default function App() {
   const user = getAuthenticatedUser(); // { uid, role, ... } or null
 
@@ -128,8 +113,8 @@ export default function App() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/faq" element={<FAQPage />} />
 
-      {/* Doctor Routes (wrap in layout when ready) */}
-      {/* <Route
+      {/* Doctor Routes */}
+      <Route
         path="/doctor"
         element={
           <RequireAuth allowedRoles={["doctor"]}>
@@ -143,7 +128,7 @@ export default function App() {
           path="patients"
           element={<PatientsList doctorUid={user?.uid || ""} />}
         />
-        <Route path="patients/:patientId" element={<PatientDashboard />} />
+        <Route path="patients/:patientId" element={<PatientDashboardfordoc />} />
         <Route path="alerts" element={<DoctorAlerts />} />
         <Route path="reports" element={<DoctorReports />} />
         <Route
@@ -151,9 +136,9 @@ export default function App() {
           element={<DoctorPrescription doctorUid={user?.uid || ""} />}
         />
         <Route path="consult" element={<DoctorConsult />} />
-      </Route> */}
+      </Route>
 
-      {/* Patient Routes – NEW layout with navbar */}
+      {/* Patient Routes – layout with navbar */}
       <Route
         path="/patient"
         element={
@@ -162,16 +147,15 @@ export default function App() {
           </RequireAuth>
         }
       >
-        {/* For now, use HealthTrackDashboard (full patient dashboard) */}
-        <Route index element={<HealthTrackDashboard />} />
-
-        {/* When you split pages, map them like this:
+          <Route index element={<PatientDashboard />} />
+        <Route path="dashboard" element={<PatientDashboard />} />
+        {/* default dashboard when user hits /patient */}
         <Route path="alerts" element={<PatientAlerts />} />
         <Route path="medication" element={<PatientMedication />} />
         <Route path="reports" element={<PatientReports />} />
         <Route path="consult" element={<PatientConsult />} />
         <Route path="doctors" element={<PatientDoctors />} />
-        */}
+        
       </Route>
 
       {/* Family Routes */}

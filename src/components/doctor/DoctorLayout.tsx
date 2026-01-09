@@ -6,7 +6,7 @@ type DoctorLayoutProps = {
   user?: any;
 };
 
-export const DoctorLayout: React.FC<DoctorLayoutProps> = ({ user }) => {
+ const DoctorLayout: React.FC<DoctorLayoutProps> = ({ user }) => {
   const safeUser = user || null;
 
   return (
@@ -20,3 +20,4 @@ export const DoctorLayout: React.FC<DoctorLayoutProps> = ({ user }) => {
     </div>
   );
 };
+export default DoctorLayout;
