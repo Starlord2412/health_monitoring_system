@@ -26,5 +26,5 @@ export const startLiveHealthUpdater = (patientId) => {
     const data = getRandomVitals();
     // Path: patients/{patientId}/liveHealth
     set(ref(db, `patients/${patientId}/liveHealth`), data);
-  }, 20000); // update every 5 seconds
+  }, 10000); // update every 5 seconds
 };

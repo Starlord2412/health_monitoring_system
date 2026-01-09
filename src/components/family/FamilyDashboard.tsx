@@ -1,3 +1,4 @@
+// // src/components/FamilyDashboard.tsx
 // import { useEffect, useState } from "react";
 // import { Card } from "../ui/card";
 // import { Badge } from "../ui/badge";
@@ -77,7 +78,6 @@
 // const FAMILY_PATIENT_UID_KEY = "family_scanned_patient_uid";
 
 // export default function FamilyDashboard() {
-//   // load last scanned patient from localStorage
 //   const [scannedPatientUid, setScannedPatientUid] = useState<string>(() => {
 //     if (typeof window === "undefined") return "";
 //     return localStorage.getItem(FAMILY_PATIENT_UID_KEY) || "";
@@ -87,7 +87,7 @@
 //   const [loadingPatient, setLoadingPatient] = useState(false);
 //   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-//   // whenever UID changes, persist it
+//   // persist UID
 //   useEffect(() => {
 //     if (typeof window === "undefined") return;
 //     if (scannedPatientUid) {
@@ -97,7 +97,7 @@
 //     }
 //   }, [scannedPatientUid]);
 
-//   // Load basic patient node when UID is set
+//   // load basic patient once per UID
 //   useEffect(() => {
 //     if (!scannedPatientUid) {
 //       setPatientData(null);
@@ -109,13 +109,19 @@
 //       setLoadingPatient(true);
 //       setErrorMsg(null);
 //       try {
-//         const snap = await get(ref(db, `patients/${scannedPatientUid}`));
+//         const patientRef = ref(db, `patients/${scannedPatientUid}`);
+//         const snap = await get(patientRef);
+
 //         if (!snap.exists()) {
+//           console.warn("No patient node for uid:", scannedPatientUid);
 //           setPatientData(null);
 //           setErrorMsg("No patient found for this QR.");
 //           return;
 //         }
+
 //         const p = snap.val();
+//         console.log("Loaded patient node:", p);
+
 //         setPatientData({
 //           uid: scannedPatientUid,
 //           name: p.name,
@@ -134,28 +140,46 @@
 //     load();
 //   }, [scannedPatientUid]);
 
-//   // Subscribe to liveHealth
+//   // subscribe to liveHealth in real time
 //   useEffect(() => {
 //     if (!scannedPatientUid) return;
 
 //     const liveRef = ref(db, `patients/${scannedPatientUid}/liveHealth`);
-//     const unsub = onValue(liveRef, (snap) => {
-//       if (!snap.exists()) {
+
+//     const unsub = onValue(
+//       liveRef,
+//       (snap) => {
+//         const exists = snap.exists();
+//         const val = snap.val();
+//         console.log("liveHealth snapshot:", {
+//           exists,
+//           value: val,
+//           path: `patients/${scannedPatientUid}/liveHealth`,
+//         });
+
+//         if (!exists || !val) {
+//           setLiveHealth(null);
+//           return;
+//         }
+
+//         setLiveHealth(val as LiveHealth);
+//       },
+//       (error) => {
+//         console.error("Error in liveHealth listener:", error);
 //         setLiveHealth(null);
-//         return;
 //       }
-//       setLiveHealth(snap.val() as LiveHealth);
-//     });
+//     );
 
 //     return () => unsub();
 //   }, [scannedPatientUid]);
 
 //   const healthScore =
-//     liveHealth?.overallHealthScore !== undefined
+//     liveHealth?.overallHealthScore !== undefined &&
+//     liveHealth?.overallHealthScore !== null
 //       ? liveHealth.overallHealthScore
 //       : 85;
 
-//   const hr = liveHealth?.heartRate ?? 72;
+//   const hr = liveHealth?.heartRate ?? undefined;
 //   const bp = liveHealth?.bloodPressure ?? "120/80";
 //   const spo2 = liveHealth?.oxygenLevel ?? 98;
 //   const temp = liveHealth?.temperature ?? 98.6;
@@ -191,6 +215,7 @@
 //           <div className="flex flex-col items-start gap-2 md:items-end">
 //             <ScanQrFromImage
 //               onUidDetected={(uid) => {
+//                 console.log("QR detected UID:", uid);
 //                 setScannedPatientUid(uid);
 //               }}
 //             />
@@ -279,7 +304,7 @@
 //                   {hr} bpm
 //                 </p>
 //                 <p className="mt-1 text-xs text-slate-500">
-//                   Average today (bpm)
+//                   Current heart rate
 //                 </p>
 //               </div>
 //               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50">
@@ -340,7 +365,7 @@
 //           </Card>
 //         </div>
 
-//         {/* Trend chart */}
+//         {/* Trend chart (still dummy) */}
 //         <Card className="rounded-2xl border-0 bg-white shadow-md p-6">
 //           <div className="mb-4 flex items-center justify-between">
 //             <div>
@@ -474,6 +499,20 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // src/components/FamilyDashboard.tsx
 import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
@@ -540,7 +579,7 @@ type LiveHealth = {
   oxygenLevel?: number;
   temperature?: number;
   overallHealthScore?: number;
-  respiratoryRate?:number;
+  respiratoryRate?: number;
 };
 
 type PatientNode = {
@@ -552,27 +591,32 @@ type PatientNode = {
   liveHealth?: LiveHealth;
 };
 
-const FAMILY_PATIENT_UID_KEY = "family_scanned_patient_uid";
+type FamilyDashboardProps = {
+  familyUid: string; // logged-in family user's uid
+};
 
-export default function FamilyDashboard() {
+export default function FamilyDashboard({ familyUid }: FamilyDashboardProps) {
+  // per-family storage key
+  const STORAGE_KEY = `family_scanned_patient_uid:${familyUid}`;
+
   const [scannedPatientUid, setScannedPatientUid] = useState<string>(() => {
     if (typeof window === "undefined") return "";
-    return localStorage.getItem(FAMILY_PATIENT_UID_KEY) || "";
+    return localStorage.getItem(STORAGE_KEY) || "";
   });
   const [patientData, setPatientData] = useState<PatientNode | null>(null);
   const [liveHealth, setLiveHealth] = useState<LiveHealth | null>(null);
   const [loadingPatient, setLoadingPatient] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // persist UID
+  // persist UID per family
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (scannedPatientUid) {
-      localStorage.setItem(FAMILY_PATIENT_UID_KEY, scannedPatientUid);
+      localStorage.setItem(STORAGE_KEY, scannedPatientUid);
     } else {
-      localStorage.removeItem(FAMILY_PATIENT_UID_KEY);
+      localStorage.removeItem(STORAGE_KEY);
     }
-  }, [scannedPatientUid]);
+  }, [scannedPatientUid, STORAGE_KEY]);
 
   // load basic patient once per UID
   useEffect(() => {
@@ -597,7 +641,6 @@ export default function FamilyDashboard() {
         }
 
         const p = snap.val();
-        console.log("Loaded patient node:", p);
 
         setPatientData({
           uid: scannedPatientUid,
@@ -626,20 +669,11 @@ export default function FamilyDashboard() {
     const unsub = onValue(
       liveRef,
       (snap) => {
-        const exists = snap.exists();
-        const val = snap.val();
-        console.log("liveHealth snapshot:", {
-          exists,
-          value: val,
-          path: `patients/${scannedPatientUid}/liveHealth`,
-        });
-
-        if (!exists || !val) {
+        if (!snap.exists()) {
           setLiveHealth(null);
           return;
         }
-
-        setLiveHealth(val as LiveHealth);
+        setLiveHealth(snap.val() as LiveHealth);
       },
       (error) => {
         console.error("Error in liveHealth listener:", error);
@@ -656,11 +690,36 @@ export default function FamilyDashboard() {
       ? liveHealth.overallHealthScore
       : 85;
 
-  const hr = liveHealth?.heartRate ?? 72;
+  const hr = liveHealth?.heartRate;
   const bp = liveHealth?.bloodPressure ?? "120/80";
   const spo2 = liveHealth?.oxygenLevel ?? 98;
   const temp = liveHealth?.temperature ?? 98.6;
-  const resp = liveHealth?.respiratoryRate ?? 16;
+const resp = liveHealth?.respiratoryRate ?? 16;  
+  // EMPTY STATE: no linked patient for this family
+  if (!scannedPatientUid) {
+    return (
+      <div className="min-h-screen bg-[#cfeee6] py-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6">
+          <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-white py-16 shadow-md">
+            <p className="text-lg font-semibold text-slate-800">
+              No linked patient
+            </p>
+            <p className="text-sm text-slate-500">
+              Scan your loved one's QR code to link their health dashboard.
+            </p>
+            <ScanQrFromImage
+              onUidDetected={(uid) => {
+                console.log("QR detected UID:", uid);
+                setScannedPatientUid(uid);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // NORMAL DASHBOARD (per family, persists across their logins)
   return (
     <div className="min-h-screen bg-[#cfeee6] py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6">
@@ -674,7 +733,7 @@ export default function FamilyDashboard() {
               Monitor vitals, activity, and alerts for your loved one in real
               time.
             </p>
-            {scannedPatientUid && patientData && (
+            {patientData && (
               <p className="mt-1 text-xs text-slate-700">
                 Linked to patient:{" "}
                 <span className="font-semibold">
@@ -682,14 +741,10 @@ export default function FamilyDashboard() {
                 </span>
               </p>
             )}
-            {!scannedPatientUid && (
-              <p className="mt-1 text-xs text-slate-500">
-                Scan a patient QR from gallery to link this family view.
-              </p>
-            )}
           </div>
 
           <div className="flex flex-col items-start gap-2 md:items-end">
+            {/* Optional: allow changing to another patient by scanning again */}
             <ScanQrFromImage
               onUidDetected={(uid) => {
                 console.log("QR detected UID:", uid);
@@ -759,9 +814,7 @@ export default function FamilyDashboard() {
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
                   Last visit:{" "}
-                  {patientData?.lastVisit
-                    ? patientData.lastVisit
-                    : "Not recorded"}
+                  {patientData?.lastVisit ? patientData.lastVisit : "Not recorded"}
                 </p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50">
@@ -778,7 +831,7 @@ export default function FamilyDashboard() {
               <div>
                 <p className="text-xs text-slate-500">Heart rate</p>
                 <p className="mt-1 text-xl font-semibold text-slate-900">
-                  {hr} bpm
+                  {hr !== undefined ? `${hr} bpm` : "-"}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
                   Current heart rate
@@ -842,7 +895,7 @@ export default function FamilyDashboard() {
           </Card>
         </div>
 
-        {/* Trend chart (still dummy) */}
+        {/* Trend chart */}
         <Card className="rounded-2xl border-0 bg-white shadow-md p-6">
           <div className="mb-4 flex items-center justify-between">
             <div>

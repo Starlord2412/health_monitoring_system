@@ -43,7 +43,7 @@ import "./index.css";
 import { getToken, onMessage } from "firebase/messaging";
 import { messaging } from "./lib/firebase.js";
 import { getAuthenticatedUser } from "./services/authService.js";
-
+import { startLiveHealthUpdater } from "./services/healthDataGenerator.js";
 // ---------- Auth wrapper ----------
 function RequireAuth({ children, allowedRoles }) {
   const user = getAuthenticatedUser();
@@ -62,6 +62,17 @@ function RequireAuth({ children, allowedRoles }) {
 // ---------- App component ----------
 export default function App() {
   const user = getAuthenticatedUser(); // { uid, role, ... } or null
+
+
+useEffect(() => {
+    const authUser = getAuthenticatedUser();
+    if (authUser?.uid) {
+      startLiveHealthUpdater(authUser.uid);
+    }
+  }, []);
+
+
+
 
   useEffect(() => {
     const requestPermissionAndToken = async () => {
@@ -148,7 +159,7 @@ export default function App() {
         }
       >
           <Route index element={<PatientDashboard />} />
-        <Route path="dashboard" element={<PatientDashboard />} />
+        <Route path="dashboard" element={<PatientDashboard uid={user?.uid} />} />
         {/* default dashboard when user hits /patient */}
         <Route path="alerts" element={<PatientAlerts />} />
         <Route path="medication" element={<PatientMedication />} />
@@ -168,7 +179,7 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<FamilyDashboard />} />
+        <Route path="dashboard" element={<FamilyDashboard uid={user?.uid} />} />
         <Route path="alerts" element={<AlertsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="medication" element={<MedicationPage />} />
