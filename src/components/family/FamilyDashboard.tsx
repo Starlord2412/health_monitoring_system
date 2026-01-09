@@ -540,6 +540,7 @@ type LiveHealth = {
   oxygenLevel?: number;
   temperature?: number;
   overallHealthScore?: number;
+  respiratoryRate?:number;
 };
 
 type PatientNode = {
@@ -659,7 +660,7 @@ export default function FamilyDashboard() {
   const bp = liveHealth?.bloodPressure ?? "120/80";
   const spo2 = liveHealth?.oxygenLevel ?? 98;
   const temp = liveHealth?.temperature ?? 98.6;
-
+const reap= liveHealth?.respiratoryRate ??16;
   return (
     <div className="min-h-screen bg-[#cfeee6] py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6">
@@ -754,7 +755,7 @@ export default function FamilyDashboard() {
               <div>
                 <p className="text-xs text-slate-500">Respiratory Rate</p>
                 <p className="mt-1 text-2xl font-semibold text-slate-900">
-                  {patientData?.condition || "Unknown"}
+                  {resp}
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
                   Last visit:{" "}
