@@ -23,6 +23,7 @@ import { Plus, Edit, Pill } from "lucide-react";
 // Firebase imports
 import { getDatabase, ref, onValue, push, set, update } from "firebase/database";
 import { app } from "../../lib/firebase";
+import { getAuthenticatedUser } from "../../services/authService";
 
 type Prescription = {
   id: number;
@@ -38,14 +39,21 @@ type Prescription = {
   expiresAt?: number; // timestamp in ms
 };
 
-const parseDurationDays = (duration: string): number => {
+type Patient = {
+  uid: string;
+  name: string;
+  assignedDoctorId: string | null;
+  assignedDoctorName?: string | null;
+};
+
+const parseDurationDaysTop = (duration: string): number => {
   const match = duration.match(/(\d+)\s*day/i);
   if (!match) return 0;
   return Number(match[1]) || 0;
 };
 
-const isExpired = (p: Prescription): boolean => {
-  const days = parseDurationDays(p.duration);
+const isExpiredTop = (p: Prescription): boolean => {
+  const days = parseDurationDaysTop(p.duration);
   if (!p.dateIssued || !days) return false;
 
   const start = new Date(p.dateIssued);
@@ -63,7 +71,7 @@ export default function DoctorPrescription() {
   const [loading, setLoading] = useState(true);
 
   const [newPrescription, setNewPrescription] = useState({
-    patient: "",
+    patient: "",      // will hold patient UID
     medication: "",
     dosage: "",
     frequency: "",
@@ -73,9 +81,12 @@ export default function DoctorPrescription() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingPrescription, setEditingPrescription] = useState<
-    Prescription | null
-  >(null);
+  const [editingPrescription, setEditingPrescription] =
+    useState<Prescription | null>(null);
+
+  // current doctor and his patients
+  const [doctorId, setDoctorId] = useState<string | null>(null);
+  const [patients, setPatients] = useState<Patient[]>([]);
 
   // ---- helpers for duration / expiry ----
 
@@ -84,7 +95,10 @@ export default function DoctorPrescription() {
     return match ? Number(match[1]) : 0;
   };
 
-  const computeExpiresAt = (dateIssued: string, duration: string): number | null => {
+  const computeExpiresAt = (
+    dateIssued: string,
+    duration: string
+  ): number | null => {
     const days = parseDurationDays(duration);
     if (!days) return null;
 
@@ -95,6 +109,47 @@ export default function DoctorPrescription() {
     expires.setDate(expires.getDate() + days);
     return expires.getTime();
   };
+
+  // ---- Load current doctor from storage and subscribe to his patients ----
+ useEffect(() => {
+  const user = getAuthenticatedUser();
+  if (!user || user.role !== "doctor") {
+    setDoctorId(null);
+    setPatients([]);
+    return;
+  }
+
+  const currentDoctorId = user.uid;
+  setDoctorId(currentDoctorId);
+
+  const db = getDatabase(app);
+  const patientsRef = ref(db, "patients");
+
+const unsubscribePatients = onValue(patientsRef, (snapshot) => {
+  const data = snapshot.val();
+  if (!data) {
+    setPatients([]);
+    return;
+  }
+
+  const list: Patient[] = Object.entries(data).map(([key, value]: [string, any]) => ({
+    uid: value.uid || key,
+    name:
+      value.name ||
+      (value.details
+        ? `${value.details.firstName || ""} ${value.details.lastName || ""}`.trim()
+        : key),
+    assignedDoctorId: value.assignedDoctorId ?? null,
+    assignedDoctorName: value.assignedDoctorName ?? null,
+  }));
+
+  setPatients(list);
+});
+;
+
+  return () => unsubscribePatients();
+}, []);
+
 
   // ---- Read prescriptions from Realtime DB ----
   useEffect(() => {
@@ -117,13 +172,6 @@ export default function DoctorPrescription() {
       );
       setPrescriptions(list);
       setLoading(false);
-
-      // if (expiredKeys.length > 0) {
-      //   expiredKeys.forEach((k) => {
-      //     const itemRef = ref(db, `prescriptions/${k}`);
-      //     set(itemRef, null); // delete expired from DB
-      //   });
-      // }
     });
 
     return () => unsubscribe();
@@ -143,21 +191,28 @@ export default function DoctorPrescription() {
   };
 
   // ---- Add or update prescription ----
-  const handleSavePrescription = async () => {
-    if (
-      !newPrescription.patient ||
-      !newPrescription.medication ||
-      !newPrescription.dosage
-    ) {
-      return;
-    }
+const handleSavePrescription = async () => {
+  if (
+    !newPrescription.patient ||
+    !newPrescription.medication ||
+    !newPrescription.dosage
+  ) {
+    console.log("Missing required fields");
+    return;
+  }
 
-    const db = getDatabase(app);
-    const prescriptionsRef = ref(db, "prescriptions");
-    const todayStr = new Date().toISOString().split("T")[0];
+  const db = getDatabase(app);
+  const prescriptionsRef = ref(db, "prescriptions");
+  const todayStr = new Date().toISOString().split("T")[0];
 
+  const selectedPatient = patients.find(
+    (p) => p.uid === newPrescription.patient
+  );
+  const patientName = selectedPatient?.name ?? "";
+  const patientId = selectedPatient?.uid;
+
+  try {
     if (isEditing && editingPrescription?.firebaseKey) {
-      // UPDATE existing
       const itemRef = ref(
         db,
         `prescriptions/${editingPrescription.firebaseKey}`
@@ -173,13 +228,15 @@ export default function DoctorPrescription() {
       const updated: Prescription = {
         ...editingPrescription,
         ...newPrescription,
+        patient: patientName,
+        patientId,
         dateIssued,
         expiresAt,
       };
 
+      console.log("Updating prescription", updated);
       await update(itemRef, updated);
     } else {
-      // CREATE new
       const newRef = push(prescriptionsRef);
 
       const dateIssued = todayStr;
@@ -189,23 +246,36 @@ export default function DoctorPrescription() {
       const prescription: Prescription = {
         ...newPrescription,
         id: Date.now(),
+        patient: patientName,
+        patientId,
         dateIssued,
         expiresAt,
       };
 
+      console.log("Creating prescription at key", newRef.key, prescription);
       await set(newRef, prescription);
     }
+  } catch (e) {
+    console.error("Error saving prescription", e);
+  }
 
-    resetForm();
-    setDialogOpen(false);
-  };
+  resetForm();
+  setDialogOpen(false);
+};
+
 
   // when clicking Edit on a card
   const handleEditClick = (prescription: Prescription) => {
     setIsEditing(true);
     setEditingPrescription(prescription);
+
+    // find matching patient UID if available
+    const matchingPatient = patients.find(
+      (p) => p.uid === prescription.patientId
+    );
+
     setNewPrescription({
-      patient: prescription.patient,
+      patient: matchingPatient ? matchingPatient.uid : "",
       medication: prescription.medication,
       dosage: prescription.dosage,
       frequency: prescription.frequency,
@@ -224,14 +294,12 @@ export default function DoctorPrescription() {
   // ---- Derived lists: active vs history ----
   const now = Date.now();
 
-  const activePrescriptions = useMemo(
-    () =>
-      prescriptions.filter((p) => {
-        if (!p.expiresAt) return true;
-        return p.expiresAt > now;
-      }),
-    [prescriptions, now]
-  );
+const activePrescriptions = useMemo(
+  () => prescriptions,
+  [prescriptions]
+);
+
+
 
   const historyPrescriptions = useMemo(
     () =>
@@ -267,6 +335,7 @@ export default function DoctorPrescription() {
               <Button
                 className="bg-teal-500 hover:bg-teal-600"
                 onClick={handleNewClick}
+                disabled={!doctorId || patients.length === 0}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 New prescription
@@ -300,19 +369,20 @@ export default function DoctorPrescription() {
                       }
                     >
                       <SelectTrigger className="mt-1 h-9 text-sm bg-white border border-slate-300 focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500/80">
-                        <SelectValue placeholder="Select patient" />
+                        <SelectValue
+                          placeholder={
+                            patients.length === 0
+                              ? "No assigned patients"
+                              : "Select patient"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-slate-200 text-slate-900">
-                        <SelectItem value="Sarah Johnson">
-                          Sarah Johnson
-                        </SelectItem>
-                        <SelectItem value="Michael Chen">
-                          Michael Chen
-                        </SelectItem>
-                        <SelectItem value="Emily Davis">Emily Davis</SelectItem>
-                        <SelectItem value="Robert Wilson">
-                          Robert Wilson
-                        </SelectItem>
+                        {patients.map((p) => (
+                          <SelectItem key={p.uid} value={p.uid}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -382,12 +452,8 @@ export default function DoctorPrescription() {
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-slate-200 text-slate-900">
-                        <SelectItem value="Once daily">
-                          Once daily
-                        </SelectItem>
-                        <SelectItem value="Twice daily">
-                          Twice daily
-                        </SelectItem>
+                        <SelectItem value="Once daily">Once daily</SelectItem>
+                        <SelectItem value="Twice daily">Twice daily</SelectItem>
                         <SelectItem value="Three times daily">
                           Three times daily
                         </SelectItem>
@@ -445,6 +511,7 @@ export default function DoctorPrescription() {
                 <Button
                   className="mt-2 w-full bg-teal-500 hover:bg-teal-600 text-white font-medium shadow-md shadow-teal-500/40"
                   onClick={handleSavePrescription}
+                  disabled={!newPrescription.patient}
                 >
                   {isEditing ? "Save changes" : "Add prescription"}
                 </Button>
@@ -468,7 +535,9 @@ export default function DoctorPrescription() {
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {loading ? "Loading..." : `${activePrescriptions.length} records`}
+                {loading
+                  ? "Loading..."
+                  : `${activePrescriptions.length} records`}
               </span>
             </div>
           </CardHeader>
@@ -558,22 +627,22 @@ export default function DoctorPrescription() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-lg">
-                  Prescription history
-                </CardTitle>
+                <CardTitle className="text-lg">Prescription history</CardTitle>
                 <p className="mt-1 text-xs text-slate-500">
                   View all prescriptions, including expired ones.
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {loading ? "Loading..." : `${historyPrescriptions.length} total`}
+                {loading
+                  ? "Loading..."
+                  : `${historyPrescriptions.length} total`}
               </span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-xs">
               {historyPrescriptions.map((p) => {
-                const isExpired =
+                const expired =
                   typeof p.expiresAt === "number" && p.expiresAt <= now;
                 return (
                   <div
@@ -587,17 +656,15 @@ export default function DoctorPrescription() {
                       <p className="text-slate-500">
                         {p.dosage} • {p.frequency} • {p.duration}
                       </p>
-                      <p className="text-slate-400">
-                        Issued: {p.dateIssued}
-                      </p>
+                      <p className="text-slate-400">Issued: {p.dateIssued}</p>
                     </div>
                     <div className="text-right">
                       <p
                         className={`text-xs ${
-                          isExpired ? "text-red-500" : "text-emerald-600"
+                          expired ? "text-red-500" : "text-emerald-600"
                         }`}
                       >
-                        {isExpired ? "Expired" : "Active"}
+                        {expired ? "Expired" : "Active"}
                       </p>
                     </div>
                   </div>
