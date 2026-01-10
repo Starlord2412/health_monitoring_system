@@ -1,5 +1,5 @@
 // src/App.jsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 
 import HomePage from "./pages/homepage";
@@ -62,7 +62,7 @@ function RequireAuth({ children, allowedRoles }) {
 // ---------- App component ----------
 export default function App() {
   const user = getAuthenticatedUser(); // { uid, role, ... } or null
-
+const {patientId }=useParams();
 
 useEffect(() => {
     const authUser = getAuthenticatedUser();
@@ -159,7 +159,8 @@ useEffect(() => {
         }
       >
           <Route index element={<PatientDashboard />} />
-        <Route path="dashboard" element={<PatientDashboard uid={user?.uid} />} />
+        <Route path="doctor/patient/:patientId" element={<PatientDashboard  />} />
+          {/* <Route path="doctor/patient/:patientId" element={<PatientDashboard uid={user?.uid} />} /> */}
         {/* default dashboard when user hits /patient */}
         <Route path="alerts" element={<PatientAlerts />} />
         <Route path="medication" element={<PatientMedication />} />
