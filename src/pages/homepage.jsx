@@ -15,6 +15,9 @@ export default function HomePage() {
   const navigate = useNavigate();
   const getStartedRef = useRef(null);
 
+  console.log("Firebase Project ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
+console.log("Firebase Database URL:", import.meta.env.VITE_FIREBASE_DATABASE_URL);
+
 
   const goToLogin = () => navigate("/login");
 
