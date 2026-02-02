@@ -2,7 +2,7 @@
 import { initializeApp } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
 import { getAuth } from 'firebase/auth'
-import { getMessaging } from 'firebase/messaging'
+import { getMessaging,isSupported } from 'firebase/messaging'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,4 +17,6 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig)
 export const db = getDatabase(app)
 export const auth = getAuth(app)
-export const messaging = getMessaging(app)
+export const messaging = isSupported().then((supported) => {
+  if (supported) messaging = getMessaging(app);
+});
